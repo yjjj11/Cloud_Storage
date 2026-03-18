@@ -49,7 +49,7 @@ std::string upload_file(const CloudStorageMetadata &metadata, const std::string 
     
     // 存储文件
     std::string filepath = STORAGE_DIR + "/" + metadata.fileId;
-    std::ofstream file(filepath, std::ios::binary);
+    std::ofstream file(filepath+"_"+metadata.filename, std::ios::binary);
     if (file.is_open()) {
         file << content;
         file.close();
@@ -57,18 +57,18 @@ std::string upload_file(const CloudStorageMetadata &metadata, const std::string 
         // 存储元数据到RaftKV
         if (g_kvService) {
             std::cout<<"here、n"<<std::endl;
-            std::string key = "metadata:" + metadata.filename;
+            std::string key = "metadata:" + metadata.fileId;
             json json = metadata;
             auto success = g_kvService->Put(key, json.dump());
             if (success) {
-                std::cout << "Metadata submitted successfully for filename: " << metadata.filename << std::endl;
+                std::cout << "Metadata submitted successfully for fileId: " << metadata.fileId << std::endl;    
             } else {
-                std::cout << "Failed to submit metadata for filename: " << metadata.filename << std::endl;
+                std::cout << "Failed to submit metadata for fileId: " << metadata.fileId << std::endl;
             }
         }
-        return "File uploaded successfully: " + metadata.filename;
+        return "File uploaded successfully: " + metadata.fileId;
     } else {
-        std::cout << "Failed to upload file: " << metadata.filename << std::endl;
+        std::cout << "Failed to upload file: " << metadata.fileId << std::endl;
         return "Failed to upload file";
     }
 }
