@@ -69,48 +69,31 @@ include CMakeFiles/testRpc.dir/progress.make
 # Include the compile flags for this target's objects.
 include CMakeFiles/testRpc.dir/flags.make
 
-CMakeFiles/testRpc.dir/test.cpp.o: CMakeFiles/testRpc.dir/flags.make
-CMakeFiles/testRpc.dir/test.cpp.o: /home/yjj/log_and_storage/test.cpp
-CMakeFiles/testRpc.dir/test.cpp.o: CMakeFiles/testRpc.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/yjj/log_and_storage/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building CXX object CMakeFiles/testRpc.dir/test.cpp.o"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/testRpc.dir/test.cpp.o -MF CMakeFiles/testRpc.dir/test.cpp.o.d -o CMakeFiles/testRpc.dir/test.cpp.o -c /home/yjj/log_and_storage/test.cpp
+CMakeFiles/testRpc.dir/Test/testRpc.cpp.o: CMakeFiles/testRpc.dir/flags.make
+CMakeFiles/testRpc.dir/Test/testRpc.cpp.o: /home/yjj/log_and_storage/Test/testRpc.cpp
+CMakeFiles/testRpc.dir/Test/testRpc.cpp.o: CMakeFiles/testRpc.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/yjj/log_and_storage/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building CXX object CMakeFiles/testRpc.dir/Test/testRpc.cpp.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/testRpc.dir/Test/testRpc.cpp.o -MF CMakeFiles/testRpc.dir/Test/testRpc.cpp.o.d -o CMakeFiles/testRpc.dir/Test/testRpc.cpp.o -c /home/yjj/log_and_storage/Test/testRpc.cpp
 
-CMakeFiles/testRpc.dir/test.cpp.i: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/testRpc.dir/test.cpp.i"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/yjj/log_and_storage/test.cpp > CMakeFiles/testRpc.dir/test.cpp.i
+CMakeFiles/testRpc.dir/Test/testRpc.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/testRpc.dir/Test/testRpc.cpp.i"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/yjj/log_and_storage/Test/testRpc.cpp > CMakeFiles/testRpc.dir/Test/testRpc.cpp.i
 
-CMakeFiles/testRpc.dir/test.cpp.s: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/testRpc.dir/test.cpp.s"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/yjj/log_and_storage/test.cpp -o CMakeFiles/testRpc.dir/test.cpp.s
-
-CMakeFiles/testRpc.dir/third_party/Asio_mrpc/include/mrpc/ZookeeperUtil.cpp.o: CMakeFiles/testRpc.dir/flags.make
-CMakeFiles/testRpc.dir/third_party/Asio_mrpc/include/mrpc/ZookeeperUtil.cpp.o: /home/yjj/log_and_storage/third_party/Asio_mrpc/include/mrpc/ZookeeperUtil.cpp
-CMakeFiles/testRpc.dir/third_party/Asio_mrpc/include/mrpc/ZookeeperUtil.cpp.o: CMakeFiles/testRpc.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/yjj/log_and_storage/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Building CXX object CMakeFiles/testRpc.dir/third_party/Asio_mrpc/include/mrpc/ZookeeperUtil.cpp.o"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/testRpc.dir/third_party/Asio_mrpc/include/mrpc/ZookeeperUtil.cpp.o -MF CMakeFiles/testRpc.dir/third_party/Asio_mrpc/include/mrpc/ZookeeperUtil.cpp.o.d -o CMakeFiles/testRpc.dir/third_party/Asio_mrpc/include/mrpc/ZookeeperUtil.cpp.o -c /home/yjj/log_and_storage/third_party/Asio_mrpc/include/mrpc/ZookeeperUtil.cpp
-
-CMakeFiles/testRpc.dir/third_party/Asio_mrpc/include/mrpc/ZookeeperUtil.cpp.i: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/testRpc.dir/third_party/Asio_mrpc/include/mrpc/ZookeeperUtil.cpp.i"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/yjj/log_and_storage/third_party/Asio_mrpc/include/mrpc/ZookeeperUtil.cpp > CMakeFiles/testRpc.dir/third_party/Asio_mrpc/include/mrpc/ZookeeperUtil.cpp.i
-
-CMakeFiles/testRpc.dir/third_party/Asio_mrpc/include/mrpc/ZookeeperUtil.cpp.s: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/testRpc.dir/third_party/Asio_mrpc/include/mrpc/ZookeeperUtil.cpp.s"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/yjj/log_and_storage/third_party/Asio_mrpc/include/mrpc/ZookeeperUtil.cpp -o CMakeFiles/testRpc.dir/third_party/Asio_mrpc/include/mrpc/ZookeeperUtil.cpp.s
+CMakeFiles/testRpc.dir/Test/testRpc.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/testRpc.dir/Test/testRpc.cpp.s"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/yjj/log_and_storage/Test/testRpc.cpp -o CMakeFiles/testRpc.dir/Test/testRpc.cpp.s
 
 # Object files for target testRpc
 testRpc_OBJECTS = \
-"CMakeFiles/testRpc.dir/test.cpp.o" \
-"CMakeFiles/testRpc.dir/third_party/Asio_mrpc/include/mrpc/ZookeeperUtil.cpp.o"
+"CMakeFiles/testRpc.dir/Test/testRpc.cpp.o"
 
 # External object files for target testRpc
 testRpc_EXTERNAL_OBJECTS =
 
-/home/yjj/log_and_storage/bin/testRpc: CMakeFiles/testRpc.dir/test.cpp.o
-/home/yjj/log_and_storage/bin/testRpc: CMakeFiles/testRpc.dir/third_party/Asio_mrpc/include/mrpc/ZookeeperUtil.cpp.o
+/home/yjj/log_and_storage/bin/testRpc: CMakeFiles/testRpc.dir/Test/testRpc.cpp.o
 /home/yjj/log_and_storage/bin/testRpc: CMakeFiles/testRpc.dir/build.make
-/home/yjj/log_and_storage/bin/testRpc: /usr/lib/x86_64-linux-gnu/libzookeeper_mt.so
 /home/yjj/log_and_storage/bin/testRpc: CMakeFiles/testRpc.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/home/yjj/log_and_storage/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Linking CXX executable /home/yjj/log_and_storage/bin/testRpc"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/home/yjj/log_and_storage/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Linking CXX executable /home/yjj/log_and_storage/bin/testRpc"
 	$(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/testRpc.dir/link.txt --verbose=$(VERBOSE)
 
 # Rule to build all files generated by this target.

@@ -44,7 +44,7 @@ endif()
 
 if(NOT CMAKE_INSTALL_LOCAL_ONLY)
   # Include the install script for the subdirectory.
-  include("/home/yjj/log_and_storage/build/third_party/Asio_mrpc/cmake_install.cmake")
+  include("/home/yjj/log_and_storage/build/third_party/raftKV/cmake_install.cmake")
 endif()
 
 if(CMAKE_INSTALL_COMPONENT)

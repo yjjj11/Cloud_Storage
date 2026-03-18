@@ -1,0 +1,39 @@
+cmake_minimum_required(VERSION 3.13)
+project(raftKV)
+
+set(CMAKE_BUILD_TYPE Debug)
+set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -g -O0")
+set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -g")
+
+if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+    add_compile_options(-w)
+endif()
+
+add_definitions(-DASIO_STANDALONE -DRPC_USE_LOG -D_LOG_CONSOLE)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON CACHE BOOL "Generate compile_commands.json for clangd" FORCE)
+
+execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
+    ${CMAKE_BINARY_DIR}/compile_commands.json
+    ${CMAKE_SOURCE_DIR}/compile_commands.json
+    RESULT_VARIABLE symlink_result
+    ERROR_QUIET
+)
+
+find_package(Threads REQUIRED)
+add_subdirectory(Asio_mrpc)
+
+set(EXECUTABLE_OUTPUT_PATH ${CMAKE_HOME_DIRECTORY}/bin/)
+
+# 导出 Asio_mrpc 的变量到根目录
+set(RPC_INCLUDE_DIR ${RPC_INCLUDE_DIR} PARENT_SCOPE)
+set(ASIO_INCLUDE_DIR ${ASIO_INCLUDE_DIR} PARENT_SCOPE)
+set(SPDLOG_INCLUDE_DIR ${SPDLOG_INCLUDE_DIR} PARENT_SCOPE)
+set(WLOG_INCLUDE_DIR ${WLOG_INCLUDE_DIR} PARENT_SCOPE)
+set(NLOHMANN_INCLUDE_DIR ${NLOHMANN_INCLUDE_DIR} PARENT_SCOPE)
+set(MRPC_SRC_FILES ${MRPC_SRC_FILES} PARENT_SCOPE)
+
+# 新增：导出 raftKV 自身的源文件（包含 raftnode.cpp）
+set(RAFTKV_SRC_FILES
+    ${CMAKE_CURRENT_SOURCE_DIR}/raftnode.cpp
+)
+set(RAFTKV_SRC_FILES ${RAFTKV_SRC_FILES} PARENT_SCOPE)

@@ -1,1 +1,1 @@
-/usr/bin/c++ CMakeFiles/testRpc.dir/test.cpp.o CMakeFiles/testRpc.dir/third_party/Asio_mrpc/include/mrpc/ZookeeperUtil.cpp.o -o /home/yjj/log_and_storage/bin/testRpc   -L/usr/local/lib  -Wl,-rpath,/usr/local/lib -lpthread -lhv /usr/lib/x86_64-linux-gnu/libzookeeper_mt.so 
+/usr/bin/c++ CMakeFiles/testRpc.dir/Test/testRpc.cpp.o -o /home/yjj/log_and_storage/bin/testRpc   -L/usr/local/lib  -Wl,-rpath,/usr/local/lib -lpthread -lhv 

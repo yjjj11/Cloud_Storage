@@ -8,7 +8,7 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <dirent.h>
-
+#include <mrpc/connection.hpp>
 // 路由基类（简化头文件依赖）
 class Router {
 public:
@@ -46,7 +46,8 @@ std::string generate_log_filename() {
 // 存储模块路由（子类）
 class StorageRouter : public Router {
 public:
-    StorageRouter(HttpService &service) : Router(service) {}
+    StorageRouter(HttpService &service, std::shared_ptr<mrpc::connection> storage_conn)
+        : Router(service), storage_conn_(storage_conn) {}
     ~StorageRouter() = default;
 
     void RegisterRoute() override {
@@ -60,7 +61,7 @@ public:
         service_.GET("/", [](HttpRequest* req, HttpResponse* res) -> int {
             // 从文件读取HTML内容
             std::string html;
-            std::ifstream html_file("../include/resource/index.html");
+            std::ifstream html_file("include/resource/index.html");
             if (html_file.is_open()) {
                 std::string line;
                 while (std::getline(html_file, line)) {
@@ -77,10 +78,7 @@ public:
         
         // 云存储接口
         // 1. 文件上传
-        service_.POST("/api/storage/upload", [](HttpRequest* req, HttpResponse* res) -> int {
-            // 确保存储目录存在
-            ensure_directory(STORAGE_DIR);
-            
+        service_.POST("/api/storage/upload", [this](HttpRequest* req, HttpResponse* res) -> int {
             // 获取文件名
             std::string filename = req->GetParam("filename", "");
             if (filename.empty()) {
@@ -89,106 +87,104 @@ public:
             }
             
             // 获取文件内容
-            std::string file_content;
-            
-            // 检查是否是multipart/form-data格式
-            std::string content_type = req->GetHeader("Content-Type", "");
-            if (content_type.find("multipart/form-data") != std::string::npos) {
-                // 解析multipart/form-data
-                // 这里简化处理，直接使用req->body
-                // 实际生产环境中应该使用更健壮的解析方法
-                file_content = req->body;
-            } else {
-                // 直接使用body
-                file_content = req->body;
-            }
-            
+            std::string file_content = req->body;
             if (file_content.empty()) {
                 res->SetBody("File content is required");
                 return HTTP_STATUS_BAD_REQUEST;
             }
             
-            // 存储文件
-            { 
-                std::lock_guard<std::mutex> lock(log_mutex);
-                std::string filepath = STORAGE_DIR + "/" + filename;
-                std::ofstream file(filepath, std::ios::binary);
-                if (file.is_open()) {
-                    file << file_content;
-                    file.close();
-                    res->SetBody("File uploaded successfully: " + filename);
+            // 通过RPC调用存储节点的上传服务
+            if (storage_conn_) {
+                try {
+                    auto result = storage_conn_->call<std::string>("upload_file", filename, file_content);
+                    std::string res_str = result.value();
+                    res->SetBody(res_str);
                     return HTTP_STATUS_OK;
-                } else {
-                    res->SetBody("Failed to upload file");
+                } catch (const std::exception& e) {
+                    res->SetBody("RPC error: " + std::string(e.what()));
                     return HTTP_STATUS_INTERNAL_SERVER_ERROR;
                 }
+            } else {
+                res->SetBody("No connection to storage node");
+                return HTTP_STATUS_SERVICE_UNAVAILABLE;
             }
         });
         
         // 2. 文件下载
-        service_.GET("/api/storage/download/{filename}", [](HttpRequest* req, HttpResponse* res) -> int {
+        service_.GET("/api/storage/download/{filename}", [this](HttpRequest* req, HttpResponse* res) -> int {
             std::string filename = req->GetParam("filename", "");
             if (filename.empty()) {
                 res->SetBody("Filename is required");
                 return HTTP_STATUS_BAD_REQUEST;
             }
             
-            // 读取文件
-            std::string filepath = STORAGE_DIR + "/" + filename;
-            std::ifstream file(filepath, std::ios::binary);
-            if (!file.is_open()) {
-                res->SetBody("File not found");
-                return HTTP_STATUS_NOT_FOUND;
+            // 通过RPC调用存储节点的下载服务
+            if (storage_conn_) {
+                try {
+                    auto result = storage_conn_->call<std::string>("download_file", filename);
+                    std::string file_content = result.value();
+                    if (file_content.empty()) {
+                        res->SetBody("File not found");
+                        return HTTP_STATUS_NOT_FOUND;
+                    }
+                    // 设置响应头
+                    res->content_type = APPLICATION_OCTET_STREAM;
+                    res->SetHeader("Content-Disposition", "attachment; filename=" + filename);
+                    res->SetBody(file_content);
+                    return HTTP_STATUS_OK;
+                } catch (const std::exception& e) {
+                    res->SetBody("RPC error: " + std::string(e.what()));
+                    return HTTP_STATUS_INTERNAL_SERVER_ERROR;
+                }
+            } else {
+                res->SetBody("No connection to storage node");
+                return HTTP_STATUS_SERVICE_UNAVAILABLE;
             }
-            
-            // 读取文件内容
-            std::string file_content((std::istreambuf_iterator<char>(file)), 
-                                     std::istreambuf_iterator<char>());
-            file.close();
-            
-            // 设置响应头
-            res->content_type = APPLICATION_OCTET_STREAM;
-            res->SetHeader("Content-Disposition", "attachment; filename=" + filename);
-            res->SetBody(file_content);
-            return HTTP_STATUS_OK;
         });
         
         // 3. 列举文件
-        service_.GET("/api/storage/list", [](HttpRequest* req, HttpResponse* res) -> int {
-            ensure_directory(STORAGE_DIR);
-            
-            std::string file_list = "Files:\n";
-            DIR* dir = opendir(STORAGE_DIR.c_str());
-            if (dir) {
-                struct dirent* entry;
-                while ((entry = readdir(dir)) != nullptr) {
-                    if (entry->d_type == DT_REG) {
-                        file_list += std::string("- ") + entry->d_name + "\n";
-                    }
+        service_.GET("/api/storage/list", [this](HttpRequest* req, HttpResponse* res) -> int {
+            // 通过RPC调用存储节点的列举服务
+            if (storage_conn_) {
+                try {
+                    auto result = storage_conn_->call<std::string>("list_files", 0);
+                    std::string file_list = result.value();
+                    res->SetBody(file_list);
+                    return HTTP_STATUS_OK;
+                } catch (const std::exception& e) {
+                    res->SetBody("RPC error: " + std::string(e.what()));
+                    return HTTP_STATUS_INTERNAL_SERVER_ERROR;
                 }
-                closedir(dir);
+            } else {
+                res->SetBody("No connection to storage node");
+                return HTTP_STATUS_SERVICE_UNAVAILABLE;
             }
-            
-            res->SetBody(file_list);
-            return HTTP_STATUS_OK;
         });
         
         // 4. 删除文件
-        service_.Delete("/api/storage/delete/{filename}", [](HttpRequest* req, HttpResponse* res) -> int {
+        service_.Delete("/api/storage/delete/{filename}", [this](HttpRequest* req, HttpResponse* res) -> int {
             std::string filename = req->GetParam("filename", "");
             if (filename.empty()) {
                 res->SetBody("Filename is required");
                 return HTTP_STATUS_BAD_REQUEST;
             }
             
-            std::string filepath = STORAGE_DIR + "/" + filename;
-            if (remove(filepath.c_str()) == 0) {
-                res->SetBody("File deleted successfully: " + filename);
-                return HTTP_STATUS_OK;
+            // 通过RPC调用存储节点的删除服务
+            if (storage_conn_) {
+                try {
+                    auto result = storage_conn_->call<std::string>("delete_file", filename);
+                    res->SetBody(result.value());
+                    return HTTP_STATUS_OK;
+                } catch (const std::exception& e) {
+                    res->SetBody("RPC error: " + std::string(e.what()));
+                    return HTTP_STATUS_INTERNAL_SERVER_ERROR;
+                }
             } else {
-                res->SetBody("Failed to delete file");
-                return HTTP_STATUS_INTERNAL_SERVER_ERROR;
+                res->SetBody("No connection to storage node");
+                return HTTP_STATUS_SERVICE_UNAVAILABLE;
             }
         });
     }
+private:
+    std::shared_ptr<mrpc::connection> storage_conn_;
 };

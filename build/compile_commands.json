@@ -1,14 +1,32 @@
 [
 {
   "directory": "/home/yjj/log_and_storage/build",
-  "command": "/usr/bin/c++  -I/home/yjj/log_and_storage/include -I/home/yjj/log_and_storage/include/service -I/home/yjj/log_and_storage/third_party/Asio_mrpc/include -I/home/yjj/log_and_storage/third_party/Asio_mrpc/third/asio-1.18.1/include -I/home/yjj/log_and_storage/third_party/Asio_mrpc/third/spdlog/include -I/home/yjj/log_and_storage/third_party/Asio_mrpc/third/wlog/include -I/home/yjj/log_and_storage/third_party/Asio_mrpc/third/nlohmann/include -std=gnu++20 -w -o CMakeFiles/testRpc.dir/test.cpp.o -c /home/yjj/log_and_storage/test.cpp",
-  "file": "/home/yjj/log_and_storage/test.cpp",
-  "output": "CMakeFiles/testRpc.dir/test.cpp.o"
+  "command": "/usr/bin/c++  -I/home/yjj/log_and_storage/include -I/home/yjj/log_and_storage/include/service -I/home/yjj/log_and_storage/third_party/raftKV/include -I/home/yjj/log_and_storage/third_party/raftKV/Asio_mrpc/include -I/home/yjj/log_and_storage/third_party/raftKV/Asio_mrpc/third/asio-1.18.1/include -I/home/yjj/log_and_storage/third_party/raftKV/Asio_mrpc/third/spdlog/include -I/home/yjj/log_and_storage/third_party/raftKV/Asio_mrpc/third/wlog/include -I/home/yjj/log_and_storage/third_party/raftKV/Asio_mrpc/third/nlohmann/include -std=gnu++20 -w -o CMakeFiles/testRpc.dir/Test/testRpc.cpp.o -c /home/yjj/log_and_storage/Test/testRpc.cpp",
+  "file": "/home/yjj/log_and_storage/Test/testRpc.cpp",
+  "output": "CMakeFiles/testRpc.dir/Test/testRpc.cpp.o"
 },
 {
   "directory": "/home/yjj/log_and_storage/build",
-  "command": "/usr/bin/c++  -I/home/yjj/log_and_storage/include -I/home/yjj/log_and_storage/include/service -I/home/yjj/log_and_storage/third_party/Asio_mrpc/include -I/home/yjj/log_and_storage/third_party/Asio_mrpc/third/asio-1.18.1/include -I/home/yjj/log_and_storage/third_party/Asio_mrpc/third/spdlog/include -I/home/yjj/log_and_storage/third_party/Asio_mrpc/third/wlog/include -I/home/yjj/log_and_storage/third_party/Asio_mrpc/third/nlohmann/include -std=gnu++20 -w -o CMakeFiles/testRpc.dir/third_party/Asio_mrpc/include/mrpc/ZookeeperUtil.cpp.o -c /home/yjj/log_and_storage/third_party/Asio_mrpc/include/mrpc/ZookeeperUtil.cpp",
-  "file": "/home/yjj/log_and_storage/third_party/Asio_mrpc/include/mrpc/ZookeeperUtil.cpp",
-  "output": "CMakeFiles/testRpc.dir/third_party/Asio_mrpc/include/mrpc/ZookeeperUtil.cpp.o"
+  "command": "/usr/bin/c++  -I/home/yjj/log_and_storage/include -I/home/yjj/log_and_storage/include/service -I/home/yjj/log_and_storage/third_party/raftKV/include -I/home/yjj/log_and_storage/third_party/raftKV/Asio_mrpc/include -I/home/yjj/log_and_storage/third_party/raftKV/Asio_mrpc/third/asio-1.18.1/include -I/home/yjj/log_and_storage/third_party/raftKV/Asio_mrpc/third/spdlog/include -I/home/yjj/log_and_storage/third_party/raftKV/Asio_mrpc/third/wlog/include -I/home/yjj/log_and_storage/third_party/raftKV/Asio_mrpc/third/nlohmann/include -std=gnu++20 -w -o CMakeFiles/testRaft.dir/Test/testRaft.cpp.o -c /home/yjj/log_and_storage/Test/testRaft.cpp",
+  "file": "/home/yjj/log_and_storage/Test/testRaft.cpp",
+  "output": "CMakeFiles/testRaft.dir/Test/testRaft.cpp.o"
+},
+{
+  "directory": "/home/yjj/log_and_storage/build",
+  "command": "/usr/bin/c++  -I/home/yjj/log_and_storage/include -I/home/yjj/log_and_storage/include/service -I/home/yjj/log_and_storage/third_party/raftKV/include -I/home/yjj/log_and_storage/third_party/raftKV/Asio_mrpc/include -I/home/yjj/log_and_storage/third_party/raftKV/Asio_mrpc/third/asio-1.18.1/include -I/home/yjj/log_and_storage/third_party/raftKV/Asio_mrpc/third/spdlog/include -I/home/yjj/log_and_storage/third_party/raftKV/Asio_mrpc/third/wlog/include -I/home/yjj/log_and_storage/third_party/raftKV/Asio_mrpc/third/nlohmann/include -std=gnu++20 -w -o CMakeFiles/testRaft.dir/third_party/raftKV/raftnode.cpp.o -c /home/yjj/log_and_storage/third_party/raftKV/raftnode.cpp",
+  "file": "/home/yjj/log_and_storage/third_party/raftKV/raftnode.cpp",
+  "output": "CMakeFiles/testRaft.dir/third_party/raftKV/raftnode.cpp.o"
+},
+{
+  "directory": "/home/yjj/log_and_storage/build",
+  "command": "/usr/bin/c++  -I/home/yjj/log_and_storage/include -I/home/yjj/log_and_storage/include/service -I/home/yjj/log_and_storage/third_party/raftKV/include -I/home/yjj/log_and_storage/third_party/raftKV/Asio_mrpc/include -I/home/yjj/log_and_storage/third_party/raftKV/Asio_mrpc/third/asio-1.18.1/include -I/home/yjj/log_and_storage/third_party/raftKV/Asio_mrpc/third/spdlog/include -I/home/yjj/log_and_storage/third_party/raftKV/Asio_mrpc/third/wlog/include -I/home/yjj/log_and_storage/third_party/raftKV/Asio_mrpc/third/nlohmann/include -std=gnu++20 -w -o CMakeFiles/gateway.dir/src/log/gateway.cpp.o -c /home/yjj/log_and_storage/src/log/gateway.cpp",
+  "file": "/home/yjj/log_and_storage/src/log/gateway.cpp",
+  "output": "CMakeFiles/gateway.dir/src/log/gateway.cpp.o"
+},
+{
+  "directory": "/home/yjj/log_and_storage/build",
+  "command": "/usr/bin/c++  -I/home/yjj/log_and_storage/include -I/home/yjj/log_and_storage/include/service -I/home/yjj/log_and_storage/third_party/raftKV/include -I/home/yjj/log_and_storage/third_party/raftKV/Asio_mrpc/include -I/home/yjj/log_and_storage/third_party/raftKV/Asio_mrpc/third/asio-1.18.1/include -I/home/yjj/log_and_storage/third_party/raftKV/Asio_mrpc/third/spdlog/include -I/home/yjj/log_and_storage/third_party/raftKV/Asio_mrpc/third/wlog/include -I/home/yjj/log_and_storage/third_party/raftKV/Asio_mrpc/third/nlohmann/include -std=gnu++20 -w -o CMakeFiles/storage_node.dir/src/log/storage_node.cpp.o -c /home/yjj/log_and_storage/src/log/storage_node.cpp",
+  "file": "/home/yjj/log_and_storage/src/log/storage_node.cpp",
+  "output": "CMakeFiles/storage_node.dir/src/log/storage_node.cpp.o"
 }
 ]

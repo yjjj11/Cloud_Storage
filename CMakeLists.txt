@@ -2,11 +2,11 @@ cmake_minimum_required(VERSION 3.14)
 project(AsyncLogger)
 
 add_compile_options(-w)
-# 先查找线程库（解决 Threads::Threads 作用域问题）
+# 先查找线程库（保证 Threads::Threads 全局可见）
 find_package(Threads REQUIRED)
 
-# 引入 Asio_mrpc 子项目（必须先执行，才能使用它导出的变量）
-add_subdirectory(third_party/Asio_mrpc)
+# 引入 raftKV 子目录（进而引入 Asio_mrpc）
+add_subdirectory(third_party/raftKV)
 
 # 全局产物输出目录
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin)
@@ -27,10 +27,11 @@ add_custom_target(copy_compile_commands ALL
 
 link_directories(/usr/local/lib)
 
-# 包含目录：继承 Asio_mrpc 导出的路径
-include_directories(include)
-include_directories(include/service)
+# 包含目录：继承 raftKV 传递上来的 Asio_mrpc 路径
 include_directories(
+    include
+    include/service
+    third_party/raftKV/include  # raftKV 的头文件目录
     ${RPC_INCLUDE_DIR}
     ${ASIO_INCLUDE_DIR}
     ${SPDLOG_INCLUDE_DIR}
@@ -44,26 +45,51 @@ file(MAKE_DIRECTORY ${CMAKE_SOURCE_DIR}/bin)
 
 # 编译 testRpc 可执行文件
 add_executable(testRpc
-    test.cpp
+    Test/testRpc.cpp
     ${MRPC_SRC_FILES}  # 引入 Asio_mrpc 源码
 )
 
 # 链接依赖库
-target_link_libraries(testRpc pthread hv ${ZK_LIB} Threads::Threads)
+target_link_libraries(testRpc 
+    pthread 
+    hv 
+    Threads::Threads
+)
 
-# # 编译可执行文件（无需再单独配置输出目录）
-# add_executable(logger 
-#     src/log/main.cpp
-# )
+add_executable(testRaft
+    Test/testRaft.cpp
+    ${MRPC_SRC_FILES}  # 引入 Asio_mrpc 源码
+    ${RAFTKV_SRC_FILES}  # 引入 raftKV 源码
+)
 
-# # 链接依赖库
-# target_link_libraries(logger pthread fmt hv)
+# 链接依赖库
+target_link_libraries(testRaft  
+    pthread 
+    hv 
+    Threads::Threads
+)
 
+# 网关源文件
+add_executable(gateway
+    src/log/gateway.cpp
+    ${MRPC_SRC_FILES}  # 引入 Asio_mrpc 源码
+)
 
-# # 服务端源文件
-# add_executable(log_server
-#     src/log/server.cpp
-# )
+# 链接依赖库
+target_link_libraries(gateway 
+    pthread 
+    hv 
+    Threads::Threads
+)
 
-# # 链接依赖库
-# target_link_libraries(log_server pthread hv)
+# 存储节点源文件
+add_executable(storage_node
+    src/log/storage_node.cpp
+    ${MRPC_SRC_FILES}  # 引入 Asio_mrpc 源码
+)
+
+# 链接依赖库
+target_link_libraries(storage_node 
+    pthread 
+    Threads::Threads
+)

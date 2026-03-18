@@ -65,33 +65,54 @@ CMAKE_BINARY_DIR = /home/yjj/log_and_storage/build
 # The main recursive "all" target.
 all: CMakeFiles/copy_compile_commands.dir/all
 all: CMakeFiles/testRpc.dir/all
-all: third_party/Asio_mrpc/all
+all: CMakeFiles/testRaft.dir/all
+all: CMakeFiles/gateway.dir/all
+all: CMakeFiles/storage_node.dir/all
+all: third_party/raftKV/all
 .PHONY : all
 
 # The main recursive "preinstall" target.
-preinstall: third_party/Asio_mrpc/preinstall
+preinstall: third_party/raftKV/preinstall
 .PHONY : preinstall
 
 # The main recursive "clean" target.
 clean: CMakeFiles/copy_compile_commands.dir/clean
 clean: CMakeFiles/testRpc.dir/clean
-clean: third_party/Asio_mrpc/clean
+clean: CMakeFiles/testRaft.dir/clean
+clean: CMakeFiles/gateway.dir/clean
+clean: CMakeFiles/storage_node.dir/clean
+clean: third_party/raftKV/clean
 .PHONY : clean
 
 #=============================================================================
-# Directory level rules for directory third_party/Asio_mrpc
+# Directory level rules for directory third_party/raftKV
 
 # Recursive "all" directory target.
-third_party/Asio_mrpc/all:
-.PHONY : third_party/Asio_mrpc/all
+third_party/raftKV/all: third_party/raftKV/Asio_mrpc/all
+.PHONY : third_party/raftKV/all
 
 # Recursive "preinstall" directory target.
-third_party/Asio_mrpc/preinstall:
-.PHONY : third_party/Asio_mrpc/preinstall
+third_party/raftKV/preinstall: third_party/raftKV/Asio_mrpc/preinstall
+.PHONY : third_party/raftKV/preinstall
 
 # Recursive "clean" directory target.
-third_party/Asio_mrpc/clean:
-.PHONY : third_party/Asio_mrpc/clean
+third_party/raftKV/clean: third_party/raftKV/Asio_mrpc/clean
+.PHONY : third_party/raftKV/clean
+
+#=============================================================================
+# Directory level rules for directory third_party/raftKV/Asio_mrpc
+
+# Recursive "all" directory target.
+third_party/raftKV/Asio_mrpc/all:
+.PHONY : third_party/raftKV/Asio_mrpc/all
+
+# Recursive "preinstall" directory target.
+third_party/raftKV/Asio_mrpc/preinstall:
+.PHONY : third_party/raftKV/Asio_mrpc/preinstall
+
+# Recursive "clean" directory target.
+third_party/raftKV/Asio_mrpc/clean:
+.PHONY : third_party/raftKV/Asio_mrpc/clean
 
 #=============================================================================
 # Target rules for target CMakeFiles/copy_compile_commands.dir
@@ -126,12 +147,12 @@ CMakeFiles/copy_compile_commands.dir/clean:
 CMakeFiles/testRpc.dir/all:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/testRpc.dir/build.make CMakeFiles/testRpc.dir/depend
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/testRpc.dir/build.make CMakeFiles/testRpc.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/yjj/log_and_storage/build/CMakeFiles --progress-num=1,2,3 "Built target testRpc"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/yjj/log_and_storage/build/CMakeFiles --progress-num=8,9 "Built target testRpc"
 .PHONY : CMakeFiles/testRpc.dir/all
 
 # Build rule for subdir invocation for target.
 CMakeFiles/testRpc.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/yjj/log_and_storage/build/CMakeFiles 3
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/yjj/log_and_storage/build/CMakeFiles 2
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/testRpc.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /home/yjj/log_and_storage/build/CMakeFiles 0
 .PHONY : CMakeFiles/testRpc.dir/rule
@@ -144,6 +165,84 @@ testRpc: CMakeFiles/testRpc.dir/rule
 CMakeFiles/testRpc.dir/clean:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/testRpc.dir/build.make CMakeFiles/testRpc.dir/clean
 .PHONY : CMakeFiles/testRpc.dir/clean
+
+#=============================================================================
+# Target rules for target CMakeFiles/testRaft.dir
+
+# All Build rule for target.
+CMakeFiles/testRaft.dir/all:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/testRaft.dir/build.make CMakeFiles/testRaft.dir/depend
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/testRaft.dir/build.make CMakeFiles/testRaft.dir/build
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/yjj/log_and_storage/build/CMakeFiles --progress-num=5,6,7 "Built target testRaft"
+.PHONY : CMakeFiles/testRaft.dir/all
+
+# Build rule for subdir invocation for target.
+CMakeFiles/testRaft.dir/rule: cmake_check_build_system
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/yjj/log_and_storage/build/CMakeFiles 3
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/testRaft.dir/all
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/yjj/log_and_storage/build/CMakeFiles 0
+.PHONY : CMakeFiles/testRaft.dir/rule
+
+# Convenience name for target.
+testRaft: CMakeFiles/testRaft.dir/rule
+.PHONY : testRaft
+
+# clean rule for target.
+CMakeFiles/testRaft.dir/clean:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/testRaft.dir/build.make CMakeFiles/testRaft.dir/clean
+.PHONY : CMakeFiles/testRaft.dir/clean
+
+#=============================================================================
+# Target rules for target CMakeFiles/gateway.dir
+
+# All Build rule for target.
+CMakeFiles/gateway.dir/all:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/gateway.dir/build.make CMakeFiles/gateway.dir/depend
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/gateway.dir/build.make CMakeFiles/gateway.dir/build
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/yjj/log_and_storage/build/CMakeFiles --progress-num=1,2 "Built target gateway"
+.PHONY : CMakeFiles/gateway.dir/all
+
+# Build rule for subdir invocation for target.
+CMakeFiles/gateway.dir/rule: cmake_check_build_system
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/yjj/log_and_storage/build/CMakeFiles 2
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/gateway.dir/all
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/yjj/log_and_storage/build/CMakeFiles 0
+.PHONY : CMakeFiles/gateway.dir/rule
+
+# Convenience name for target.
+gateway: CMakeFiles/gateway.dir/rule
+.PHONY : gateway
+
+# clean rule for target.
+CMakeFiles/gateway.dir/clean:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/gateway.dir/build.make CMakeFiles/gateway.dir/clean
+.PHONY : CMakeFiles/gateway.dir/clean
+
+#=============================================================================
+# Target rules for target CMakeFiles/storage_node.dir
+
+# All Build rule for target.
+CMakeFiles/storage_node.dir/all:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/storage_node.dir/build.make CMakeFiles/storage_node.dir/depend
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/storage_node.dir/build.make CMakeFiles/storage_node.dir/build
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/yjj/log_and_storage/build/CMakeFiles --progress-num=3,4 "Built target storage_node"
+.PHONY : CMakeFiles/storage_node.dir/all
+
+# Build rule for subdir invocation for target.
+CMakeFiles/storage_node.dir/rule: cmake_check_build_system
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/yjj/log_and_storage/build/CMakeFiles 2
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/storage_node.dir/all
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/yjj/log_and_storage/build/CMakeFiles 0
+.PHONY : CMakeFiles/storage_node.dir/rule
+
+# Convenience name for target.
+storage_node: CMakeFiles/storage_node.dir/rule
+.PHONY : storage_node
+
+# clean rule for target.
+CMakeFiles/storage_node.dir/clean:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/storage_node.dir/build.make CMakeFiles/storage_node.dir/clean
+.PHONY : CMakeFiles/storage_node.dir/clean
 
 #=============================================================================
 # Special targets to cleanup operation of make.

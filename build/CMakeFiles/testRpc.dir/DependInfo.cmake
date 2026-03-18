@@ -8,8 +8,7 @@ set(CMAKE_DEPENDS_LANGUAGES
 
 # The set of dependency files which are needed:
 set(CMAKE_DEPENDS_DEPENDENCY_FILES
-  "/home/yjj/log_and_storage/test.cpp" "CMakeFiles/testRpc.dir/test.cpp.o" "gcc" "CMakeFiles/testRpc.dir/test.cpp.o.d"
-  "/home/yjj/log_and_storage/third_party/Asio_mrpc/include/mrpc/ZookeeperUtil.cpp" "CMakeFiles/testRpc.dir/third_party/Asio_mrpc/include/mrpc/ZookeeperUtil.cpp.o" "gcc" "CMakeFiles/testRpc.dir/third_party/Asio_mrpc/include/mrpc/ZookeeperUtil.cpp.o.d"
+  "/home/yjj/log_and_storage/Test/testRpc.cpp" "CMakeFiles/testRpc.dir/Test/testRpc.cpp.o" "gcc" "CMakeFiles/testRpc.dir/Test/testRpc.cpp.o.d"
   )
 
 # Targets to which this target links which contain Fortran sources.

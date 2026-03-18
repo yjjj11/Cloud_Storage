@@ -228,13 +228,22 @@ CMAKE_VERBOSE_MAKEFILE:BOOL=FALSE
 ZK_LIB:FILEPATH=/usr/lib/x86_64-linux-gnu/libzookeeper_mt.so
 
 //Value Computed by CMake
-mrpc_BINARY_DIR:STATIC=/home/yjj/log_and_storage/build/third_party/Asio_mrpc
+mrpc_BINARY_DIR:STATIC=/home/yjj/log_and_storage/build/third_party/raftKV/Asio_mrpc
 
 //Value Computed by CMake
 mrpc_IS_TOP_LEVEL:STATIC=OFF
 
 //Value Computed by CMake
-mrpc_SOURCE_DIR:STATIC=/home/yjj/log_and_storage/third_party/Asio_mrpc
+mrpc_SOURCE_DIR:STATIC=/home/yjj/log_and_storage/third_party/raftKV/Asio_mrpc
+
+//Value Computed by CMake
+raftKV_BINARY_DIR:STATIC=/home/yjj/log_and_storage/build/third_party/raftKV
+
+//Value Computed by CMake
+raftKV_IS_TOP_LEVEL:STATIC=OFF
+
+//Value Computed by CMake
+raftKV_SOURCE_DIR:STATIC=/home/yjj/log_and_storage/third_party/raftKV
 
 
 ########################
@@ -343,7 +352,7 @@ CMAKE_MODULE_LINKER_FLAGS_RELWITHDEBINFO-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: CMAKE_NM
 CMAKE_NM-ADVANCED:INTERNAL=1
 //number of local generators
-CMAKE_NUMBER_OF_MAKEFILES:INTERNAL=2
+CMAKE_NUMBER_OF_MAKEFILES:INTERNAL=3
 //ADVANCED property for variable: CMAKE_OBJCOPY
 CMAKE_OBJCOPY-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: CMAKE_OBJDUMP

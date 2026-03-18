@@ -1,6 +1,11 @@
 /home/yjj/log_and_storage/build/CMakeFiles/copy_compile_commands.dir
 /home/yjj/log_and_storage/build/CMakeFiles/testRpc.dir
+/home/yjj/log_and_storage/build/CMakeFiles/testRaft.dir
+/home/yjj/log_and_storage/build/CMakeFiles/gateway.dir
+/home/yjj/log_and_storage/build/CMakeFiles/storage_node.dir
 /home/yjj/log_and_storage/build/CMakeFiles/edit_cache.dir
 /home/yjj/log_and_storage/build/CMakeFiles/rebuild_cache.dir
-/home/yjj/log_and_storage/build/third_party/Asio_mrpc/CMakeFiles/edit_cache.dir
-/home/yjj/log_and_storage/build/third_party/Asio_mrpc/CMakeFiles/rebuild_cache.dir
+/home/yjj/log_and_storage/build/third_party/raftKV/CMakeFiles/edit_cache.dir
+/home/yjj/log_and_storage/build/third_party/raftKV/CMakeFiles/rebuild_cache.dir
+/home/yjj/log_and_storage/build/third_party/raftKV/Asio_mrpc/CMakeFiles/edit_cache.dir
+/home/yjj/log_and_storage/build/third_party/raftKV/Asio_mrpc/CMakeFiles/rebuild_cache.dir

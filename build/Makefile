@@ -142,53 +142,164 @@ testRpc/fast:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/testRpc.dir/build.make CMakeFiles/testRpc.dir/build
 .PHONY : testRpc/fast
 
-test.o: test.cpp.o
-.PHONY : test.o
+#=============================================================================
+# Target rules for targets named testRaft
+
+# Build rule for target.
+testRaft: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 testRaft
+.PHONY : testRaft
+
+# fast build rule for target.
+testRaft/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/testRaft.dir/build.make CMakeFiles/testRaft.dir/build
+.PHONY : testRaft/fast
+
+#=============================================================================
+# Target rules for targets named gateway
+
+# Build rule for target.
+gateway: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 gateway
+.PHONY : gateway
+
+# fast build rule for target.
+gateway/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/gateway.dir/build.make CMakeFiles/gateway.dir/build
+.PHONY : gateway/fast
+
+#=============================================================================
+# Target rules for targets named storage_node
+
+# Build rule for target.
+storage_node: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 storage_node
+.PHONY : storage_node
+
+# fast build rule for target.
+storage_node/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/storage_node.dir/build.make CMakeFiles/storage_node.dir/build
+.PHONY : storage_node/fast
+
+Test/testRaft.o: Test/testRaft.cpp.o
+.PHONY : Test/testRaft.o
 
 # target to build an object file
-test.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/testRpc.dir/build.make CMakeFiles/testRpc.dir/test.cpp.o
-.PHONY : test.cpp.o
+Test/testRaft.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/testRaft.dir/build.make CMakeFiles/testRaft.dir/Test/testRaft.cpp.o
+.PHONY : Test/testRaft.cpp.o
 
-test.i: test.cpp.i
-.PHONY : test.i
+Test/testRaft.i: Test/testRaft.cpp.i
+.PHONY : Test/testRaft.i
 
 # target to preprocess a source file
-test.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/testRpc.dir/build.make CMakeFiles/testRpc.dir/test.cpp.i
-.PHONY : test.cpp.i
+Test/testRaft.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/testRaft.dir/build.make CMakeFiles/testRaft.dir/Test/testRaft.cpp.i
+.PHONY : Test/testRaft.cpp.i
 
-test.s: test.cpp.s
-.PHONY : test.s
+Test/testRaft.s: Test/testRaft.cpp.s
+.PHONY : Test/testRaft.s
 
 # target to generate assembly for a file
-test.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/testRpc.dir/build.make CMakeFiles/testRpc.dir/test.cpp.s
-.PHONY : test.cpp.s
+Test/testRaft.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/testRaft.dir/build.make CMakeFiles/testRaft.dir/Test/testRaft.cpp.s
+.PHONY : Test/testRaft.cpp.s
 
-third_party/Asio_mrpc/include/mrpc/ZookeeperUtil.o: third_party/Asio_mrpc/include/mrpc/ZookeeperUtil.cpp.o
-.PHONY : third_party/Asio_mrpc/include/mrpc/ZookeeperUtil.o
+Test/testRpc.o: Test/testRpc.cpp.o
+.PHONY : Test/testRpc.o
 
 # target to build an object file
-third_party/Asio_mrpc/include/mrpc/ZookeeperUtil.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/testRpc.dir/build.make CMakeFiles/testRpc.dir/third_party/Asio_mrpc/include/mrpc/ZookeeperUtil.cpp.o
-.PHONY : third_party/Asio_mrpc/include/mrpc/ZookeeperUtil.cpp.o
+Test/testRpc.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/testRpc.dir/build.make CMakeFiles/testRpc.dir/Test/testRpc.cpp.o
+.PHONY : Test/testRpc.cpp.o
 
-third_party/Asio_mrpc/include/mrpc/ZookeeperUtil.i: third_party/Asio_mrpc/include/mrpc/ZookeeperUtil.cpp.i
-.PHONY : third_party/Asio_mrpc/include/mrpc/ZookeeperUtil.i
+Test/testRpc.i: Test/testRpc.cpp.i
+.PHONY : Test/testRpc.i
 
 # target to preprocess a source file
-third_party/Asio_mrpc/include/mrpc/ZookeeperUtil.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/testRpc.dir/build.make CMakeFiles/testRpc.dir/third_party/Asio_mrpc/include/mrpc/ZookeeperUtil.cpp.i
-.PHONY : third_party/Asio_mrpc/include/mrpc/ZookeeperUtil.cpp.i
+Test/testRpc.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/testRpc.dir/build.make CMakeFiles/testRpc.dir/Test/testRpc.cpp.i
+.PHONY : Test/testRpc.cpp.i
 
-third_party/Asio_mrpc/include/mrpc/ZookeeperUtil.s: third_party/Asio_mrpc/include/mrpc/ZookeeperUtil.cpp.s
-.PHONY : third_party/Asio_mrpc/include/mrpc/ZookeeperUtil.s
+Test/testRpc.s: Test/testRpc.cpp.s
+.PHONY : Test/testRpc.s
 
 # target to generate assembly for a file
-third_party/Asio_mrpc/include/mrpc/ZookeeperUtil.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/testRpc.dir/build.make CMakeFiles/testRpc.dir/third_party/Asio_mrpc/include/mrpc/ZookeeperUtil.cpp.s
-.PHONY : third_party/Asio_mrpc/include/mrpc/ZookeeperUtil.cpp.s
+Test/testRpc.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/testRpc.dir/build.make CMakeFiles/testRpc.dir/Test/testRpc.cpp.s
+.PHONY : Test/testRpc.cpp.s
+
+src/log/gateway.o: src/log/gateway.cpp.o
+.PHONY : src/log/gateway.o
+
+# target to build an object file
+src/log/gateway.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/gateway.dir/build.make CMakeFiles/gateway.dir/src/log/gateway.cpp.o
+.PHONY : src/log/gateway.cpp.o
+
+src/log/gateway.i: src/log/gateway.cpp.i
+.PHONY : src/log/gateway.i
+
+# target to preprocess a source file
+src/log/gateway.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/gateway.dir/build.make CMakeFiles/gateway.dir/src/log/gateway.cpp.i
+.PHONY : src/log/gateway.cpp.i
+
+src/log/gateway.s: src/log/gateway.cpp.s
+.PHONY : src/log/gateway.s
+
+# target to generate assembly for a file
+src/log/gateway.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/gateway.dir/build.make CMakeFiles/gateway.dir/src/log/gateway.cpp.s
+.PHONY : src/log/gateway.cpp.s
+
+src/log/storage_node.o: src/log/storage_node.cpp.o
+.PHONY : src/log/storage_node.o
+
+# target to build an object file
+src/log/storage_node.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/storage_node.dir/build.make CMakeFiles/storage_node.dir/src/log/storage_node.cpp.o
+.PHONY : src/log/storage_node.cpp.o
+
+src/log/storage_node.i: src/log/storage_node.cpp.i
+.PHONY : src/log/storage_node.i
+
+# target to preprocess a source file
+src/log/storage_node.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/storage_node.dir/build.make CMakeFiles/storage_node.dir/src/log/storage_node.cpp.i
+.PHONY : src/log/storage_node.cpp.i
+
+src/log/storage_node.s: src/log/storage_node.cpp.s
+.PHONY : src/log/storage_node.s
+
+# target to generate assembly for a file
+src/log/storage_node.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/storage_node.dir/build.make CMakeFiles/storage_node.dir/src/log/storage_node.cpp.s
+.PHONY : src/log/storage_node.cpp.s
+
+third_party/raftKV/raftnode.o: third_party/raftKV/raftnode.cpp.o
+.PHONY : third_party/raftKV/raftnode.o
+
+# target to build an object file
+third_party/raftKV/raftnode.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/testRaft.dir/build.make CMakeFiles/testRaft.dir/third_party/raftKV/raftnode.cpp.o
+.PHONY : third_party/raftKV/raftnode.cpp.o
+
+third_party/raftKV/raftnode.i: third_party/raftKV/raftnode.cpp.i
+.PHONY : third_party/raftKV/raftnode.i
+
+# target to preprocess a source file
+third_party/raftKV/raftnode.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/testRaft.dir/build.make CMakeFiles/testRaft.dir/third_party/raftKV/raftnode.cpp.i
+.PHONY : third_party/raftKV/raftnode.cpp.i
+
+third_party/raftKV/raftnode.s: third_party/raftKV/raftnode.cpp.s
+.PHONY : third_party/raftKV/raftnode.s
+
+# target to generate assembly for a file
+third_party/raftKV/raftnode.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/testRaft.dir/build.make CMakeFiles/testRaft.dir/third_party/raftKV/raftnode.cpp.s
+.PHONY : third_party/raftKV/raftnode.cpp.s
 
 # Help Target
 help:
@@ -199,13 +310,25 @@ help:
 	@echo "... edit_cache"
 	@echo "... rebuild_cache"
 	@echo "... copy_compile_commands"
+	@echo "... gateway"
+	@echo "... storage_node"
+	@echo "... testRaft"
 	@echo "... testRpc"
-	@echo "... test.o"
-	@echo "... test.i"
-	@echo "... test.s"
-	@echo "... third_party/Asio_mrpc/include/mrpc/ZookeeperUtil.o"
-	@echo "... third_party/Asio_mrpc/include/mrpc/ZookeeperUtil.i"
-	@echo "... third_party/Asio_mrpc/include/mrpc/ZookeeperUtil.s"
+	@echo "... Test/testRaft.o"
+	@echo "... Test/testRaft.i"
+	@echo "... Test/testRaft.s"
+	@echo "... Test/testRpc.o"
+	@echo "... Test/testRpc.i"
+	@echo "... Test/testRpc.s"
+	@echo "... src/log/gateway.o"
+	@echo "... src/log/gateway.i"
+	@echo "... src/log/gateway.s"
+	@echo "... src/log/storage_node.o"
+	@echo "... src/log/storage_node.i"
+	@echo "... src/log/storage_node.s"
+	@echo "... third_party/raftKV/raftnode.o"
+	@echo "... third_party/raftKV/raftnode.i"
+	@echo "... third_party/raftKV/raftnode.s"
 .PHONY : help
 
 
