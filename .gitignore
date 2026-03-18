@@ -28,7 +28,7 @@ storage/
 .cache/
 
 # 配置文件
-config/
+# config/
 
 # IDE和编辑器文件
 .vscode/
@@ -38,10 +38,10 @@ config/
 *~
 
 # 第三方库（如果需要提交第三方库，请注释掉下面的行）
-third_party/
+# third_party/
 
-# 测试文件
-Test/
+# # 测试文件
+# Test/
 
 # 临时文件
 *.tmp
@@ -50,3 +50,4 @@ Test/
 # 系统文件
 .DS_Store
 Thumbs.db
+libhv*
