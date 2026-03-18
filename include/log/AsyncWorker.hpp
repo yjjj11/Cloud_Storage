@@ -12,6 +12,7 @@ namespace mylog {
 class Buffer {
 public:
     static const size_t kDefaultSize = 4096;
+    static const size_t kGrowthFactor = 2;  // 增长因子
 
     Buffer(size_t size = kDefaultSize) : buffer_(size), read_pos_(0), write_pos_(0) {}
 
@@ -36,7 +37,9 @@ public:
 
     void Append(const char* data, size_t len) {
         if (WritableSize() < len) {
-            buffer_.resize(write_pos_ + len);
+            // 按因子增长，减少频繁分配
+            size_t new_size = std::max(buffer_.size() * kGrowthFactor, write_pos_ + len);
+            buffer_.resize(new_size);
         }
         memcpy(&buffer_[write_pos_], data, len);
         write_pos_ += len;

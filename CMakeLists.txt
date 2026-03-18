@@ -73,6 +73,7 @@ target_link_libraries(testRaft
 add_executable(gateway
     src/log/gateway.cpp
     ${MRPC_SRC_FILES}  # 引入 Asio_mrpc 源码
+    ${RAFTKV_SRC_FILES}  # 引入 raftKV 源码
 )
 
 # 链接依赖库
@@ -82,14 +83,16 @@ target_link_libraries(gateway
     Threads::Threads
 )
 
-# 存储节点源文件
+# 存储节点源文件（三个节点）
 add_executable(storage_node
     src/log/storage_node.cpp
     ${MRPC_SRC_FILES}  # 引入 Asio_mrpc 源码
+    ${RAFTKV_SRC_FILES}  # 引入 raftKV 源码
 )
 
 # 链接依赖库
-target_link_libraries(storage_node 
+target_link_libraries(storage_node
     pthread 
+    hv
     Threads::Threads
 )

@@ -2,9 +2,10 @@
 
 #include <atomic>
 #include <cassert>
-#include <fmt/format.h>
+#include <format>
 #include <memory>
 #include <mutex>
+#include <utility>
 // 前向声明
 class ThreadPool;
 
@@ -62,9 +63,10 @@ private:
     template<typename... Args>
     void log(LogLevel::value level, const std::string &file, size_t line, std::string_view format, Args&&... args) {
         try {
-            std::string payload = fmt::vformat(format, fmt::make_format_args(std::forward<Args>(args)...));
+            // 创建参数的副本以避免右值引用问题
+            std::string payload = std::vformat(format, std::make_format_args(args...));
             serialize(level, file, line, payload);
-        } catch (const fmt::format_error& e) {
+        } catch (const std::format_error& e) {
             std::cerr << "Format error: " << e.what() << std::endl;
         }
     }
@@ -89,7 +91,6 @@ protected:
     }
 
 protected:
-    std::mutex mtx_;
     std::string logger_name_;
     std::vector<LogFlush::ptr> flushs_;
     AsyncWorker::ptr asyncworker;

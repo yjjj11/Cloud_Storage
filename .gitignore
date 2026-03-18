@@ -51,3 +51,7 @@ storage/
 .DS_Store
 Thumbs.db
 libhv*
+
+logs/*
+
+storage_*

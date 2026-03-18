@@ -31,21 +31,28 @@ public:
         Util::File::CreateDirectory(Util::File::Path(filename));
         fs_ = fopen(filename.c_str(), "ab");
         if (!fs_) {
-            std::cout << __FILE__ << __LINE__ << "open log file failed" << std::endl;
+            std::cerr << "[" << __FILE__ << ":" << __LINE__ << "] open log file failed: ";
             perror(nullptr);
+        }
+    }
+
+    ~FileFlush() override {
+        if (fs_) {
+            fclose(fs_);
+            fs_ = nullptr;
         }
     }
 
     void Flush(const char *data, size_t len) override {
         fwrite(data, 1, len, fs_);
         if (ferror(fs_)) {
-            std::cout << __FILE__ << __LINE__ << "write log file failed" << std::endl;
+            std::cerr << "[" << __FILE__ << ":" << __LINE__ << "] write log file failed: ";
             perror(nullptr);
         }
         auto g_conf_data = Util::JsonData::GetJsonData();
         if (g_conf_data->flush_log == 1) {
             if (fflush(fs_) == EOF) {
-                std::cout << __FILE__ << __LINE__ << "fflush file failed" << std::endl;
+                std::cerr << "[" << __FILE__ << ":" << __LINE__ << "] fflush file failed: ";
                 perror(nullptr);
             }
         } else if (g_conf_data->flush_log == 2) {
@@ -67,18 +74,25 @@ public:
         Util::File::CreateDirectory(Util::File::Path(filename));
     }
 
+    ~RollFileFlush() override {
+        if (fs_) {
+            fclose(fs_);
+            fs_ = nullptr;
+        }
+    }
+
     void Flush(const char *data, size_t len) override {
         InitLogFile();
         fwrite(data, 1, len, fs_);
         if (ferror(fs_)) {
-            std::cout << __FILE__ << __LINE__ << "write log file failed" << std::endl;
+            std::cerr << "[" << __FILE__ << ":" << __LINE__ << "] write log file failed: ";
             perror(nullptr);
         }
         cur_size_ += len;
         auto g_conf_data = Util::JsonData::GetJsonData();
         if (g_conf_data->flush_log == 1) {
             if (fflush(fs_)) {
-                std::cout << __FILE__ << __LINE__ << "fflush file failed" << std::endl;
+                std::cerr << "[" << __FILE__ << ":" << __LINE__ << "] fflush file failed: ";
                 perror(nullptr);
             }
         } else if (g_conf_data->flush_log == 2) {
@@ -97,7 +111,7 @@ private:
             std::string filename = CreateFilename();
             fs_ = fopen(filename.c_str(), "ab");
             if (!fs_) {
-                std::cout << __FILE__ << __LINE__ << "open file failed" << std::endl;
+                std::cerr << "[" << __FILE__ << ":" << __LINE__ << "] open file failed: ";
                 perror(nullptr);
             }
             cur_size_ = 0;
