@@ -1,1 +1,0 @@
-/usr/bin/c++ CMakeFiles/testRaft.dir/Test/testRaft.cpp.o CMakeFiles/testRaft.dir/third_party/raftKV/raftnode.cpp.o -o /home/yjj/log_and_storage/bin/testRaft   -L/usr/local/lib  -Wl,-rpath,/usr/local/lib -lpthread -lhv 
