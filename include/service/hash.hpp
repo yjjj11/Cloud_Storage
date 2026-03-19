@@ -74,7 +74,25 @@ public:
         return hashRing_[*it];
     }
 
-    NodeInfo getConnbyNodeId(const std::string& nodeport) {
+    // 移除节点
+    void removeNode(const std::string& nodeId, int port) {
+        // 移除该节点的所有虚拟节点
+        for (int i = 0; i < 160; i++) {
+            std::string virtualNode = nodeId + "#" + std::to_string(i);
+            size_t hash = hashFunc(virtualNode);
+            hashRing_.erase(hash);
+        }
+        // 移除端口到节点的映射
+        port_to_node_id_.erase(std::to_string(port));
+        // 重新排序哈希环
+        sortedHashes_.clear();
+        for (const auto& pair : hashRing_) {
+            sortedHashes_.push_back(pair.first);
+        }
+        std::sort(sortedHashes_.begin(), sortedHashes_.end());
+    }
+
+    NodeInfo getConnbyNodeport(const std::string& nodeport) {
         return port_to_node_id_[nodeport];
     }
 public:

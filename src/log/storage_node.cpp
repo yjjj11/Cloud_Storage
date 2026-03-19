@@ -48,15 +48,14 @@ std::string upload_file(const CloudStorageMetadata &metadata, const std::string 
     ensure_directory(STORAGE_DIR);
     
     // 存储文件
-    std::string filepath = STORAGE_DIR + "/" + metadata.fileId;
-    std::ofstream file(filepath+"_"+metadata.filename, std::ios::binary);
+    std::string filepath = STORAGE_DIR + "/" + metadata.filename;
+    std::ofstream file(filepath, std::ios::binary);
     if (file.is_open()) {
         file << content;
         file.close();
         std::cout << "File uploaded successfully: " << metadata.fileId << std::endl;
         // 存储元数据到RaftKV
         if (g_kvService) {
-            std::cout<<"here、n"<<std::endl;
             std::string key = "metadata:" + metadata.fileId;
             json json = metadata;
             auto success = g_kvService->Put(key, json.dump());
@@ -119,8 +118,8 @@ std::string list_files(int dummy) {
 }
 
 // RPC服务端方法：删除文件
-std::string delete_file(const std::string &filename) {
-    std::cout << "Deleting file: " << filename << std::endl;
+std::string delete_file(const std::string &filename,const std::string &fileid) {
+    std::cout << "Deleting file: " << filename << " fileId: " << fileid << std::endl;
     
     std::string filepath = STORAGE_DIR + "/" + filename;
     if (remove(filepath.c_str()) == 0) {
@@ -133,9 +132,9 @@ std::string delete_file(const std::string &filename) {
 
     // 从RaftKV中删除元数据
     if (g_kvService) {
-        std::string key = "metadata:" + filename;
+        std::string key = "metadata:" + fileid;
         g_kvService->Del(key);
-        std::cout << "Metadata deleted from RaftKV for filename: " << filename << std::endl;
+        std::cout << "Metadata deleted from RaftKV for fileId: " << fileid << std::endl;
     }
 }
 
@@ -173,12 +172,24 @@ int main(int argc, char* argv[]) {
     server.reg_func("list_files", list_files);
     server.reg_func("delete_file", delete_file);
     
+    std::this_thread::sleep_for(std::chrono::seconds(2));
+    std::string nodelist = g_kvService->Get("StorageNode");
+    nodelist[g_raftNode->node_id_]=1;
+    g_kvService->Put("StorageNode", nodelist);//表明自己已经上线
+    g_kvService->Put("NodePort:" + std::to_string(g_raftNode->node_id_), std::to_string(port));
     std::cout << "Storage node started on port " << port << std::endl;
     std::cout << "Registered RPC methods: upload_file, download_file, list_files, delete_file" << std::endl;
     
     // 启动监听
     server.accept();
     server.wait_shutdown();
+    
+    // 节点下线时，从KV中删除相应的键值对
+    if (g_kvService && g_raftNode) {
+        std::string nodeId = std::to_string(g_raftNode->node_id_);
+        g_kvService->Del("NodePort:" + nodeId);
+        std::cout << "Storage node offline: " << nodeId << " on port " << port << std::endl;
+    }
     
     // 停止Raft节点
     if (g_raftNode) {

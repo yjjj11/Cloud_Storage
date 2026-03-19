@@ -99,17 +99,15 @@ private:
 
 class GatewayServer {
 public:
-    GatewayServer(const std::string& configFile = "config/gateway_config.env", std::shared_ptr<KvService> kvService = nullptr) {
+    GatewayServer(const std::string& configFile = "config/gateway_config.env", std::shared_ptr<KvService> kvService = nullptr) : kvService_(kvService) {
         ConfigManager config(configFile);
-        kvService_ = kvService;
         port_ = config.getInt("GATEWAY_PORT", 8080);
         thread_num_ = config.getInt("GATEWAY_THREAD_NUM", 4);
         storage_ports_ = config.getIntList("STORAGE_PORTS");
         max_retries_ = config.getInt("RPC_MAX_RETRIES", 3);
-        
-        initRpcClient();
+        initClient();
+        registerWatch();
         registerRoutes();
-
         server_.registerHttpService(&service_);
         server_.setPort(port_);
         server_.setThreadNum(thread_num_);
@@ -117,6 +115,54 @@ public:
     }
     
     ~GatewayServer() = default;
+    
+    void registerWatch(){
+        if (kvService_) {
+            // 监听节点上线
+            kvService_->WATCH("put","监听节点上线",[this](const std::string& key, const std::string& value) -> bool {
+                if (key.substr(0, 8) == "NodePort:") {
+                    auto port=std::stoi(value);
+                    auto nodeId=key.substr(8);
+                    auto conn=client::get().connect("127.0.0.1", port);
+                    if (conn) {
+                        consistentHash_.addNode(nodeId,port,conn);
+                        std::cout << "Node " << nodeId << " with port " << port << " added to hash" << std::endl;
+                    } else {
+                        std::cout << "Failed to connect to node " << nodeId << " on port " << port << "" << std::endl;
+                    }
+                }
+                return true;
+            });
+            
+            // 监听节点下线
+            kvService_->WATCH("del","监听节点下线",[this](const std::string& key, const std::string& value) -> bool {
+                if (key.substr(0, 8) == "NodePort:") {
+                    auto nodeId=key.substr(8);
+                    auto port=std::stoi(value);
+                    consistentHash_.removeNode(nodeId,port);
+                    std::cout << "Node " << nodeId << " with port " << port << " removed from hash" << std::endl;
+                }
+                return true;
+            });
+        }
+    }
+    
+    // 启动健康检查线程
+    
+    void initClient(){
+        for(int i=0;i<storage_ports_.size();i++){
+            auto port=storage_ports_[i];
+            auto conn=client::get().connect("127.0.0.1", port);
+            if (conn) {
+                storage_conns_.push_back(conn);
+                consistentHash_.addNode(std::to_string(i),port,conn);
+            } else {
+                std::cout << "Failed to connect to node " << port << "" << std::endl;
+            }
+        }
+        
+    }
+   
     
     void start() {
         server_.run();
@@ -128,49 +174,9 @@ public:
     }
     
 private:
-    void initRpcClient() {
-        // 初始化RPC客户端
-        client_ = &client::get();
-        client_->run();
-        
-        // 连接到多个存储节点
-        for (int port : storage_ports_) {
-            int retry_count = 0;
-            bool connected = false;
-            
-            while (retry_count < max_retries_ && !connected) {
-                auto conn = client_->connect("127.0.0.1", port);
-                if (conn) {
-                    storage_conns_.push_back(conn);
-                    // 将节点添加到一致性哈希环
-                    std::string nodeId = "node_" + std::to_string(port);
-                    consistentHash_.addNode(nodeId, port, conn);
-                    LOG_INFO(getGatewayLogger(), "Connected to storage node on port {}", port);
-                    connected = true;
-                } else {
-                    retry_count++;
-                    if (retry_count < max_retries_) {
-                        LOG_WARN(getGatewayLogger(), "Retry {} connecting to storage node on port {}", retry_count, port);
-                        std::this_thread::sleep_for(std::chrono::seconds(1));
-                    }
-                }
-            }
-            
-            if (!connected) {
-                LOG_ERROR(getGatewayLogger(), "Failed to connect to storage node on port {} after {} attempts", port, max_retries_);
-            }
-        }
-        
-        if (storage_conns_.empty()) {
-            LOG_ERROR(getGatewayLogger(), "No storage nodes available!");
-        } else {
-            LOG_INFO(getGatewayLogger(), "Successfully connected to {} storage node(s)", storage_conns_.size());
-        }
-    }
-    
     void registerRoutes() {
         // 注册存储路由，传入一致性哈希实例和KV服务
-        storage_router_ = std::make_unique<StorageRouter>(service_, consistentHash_, kvService_);
+        storage_router_ = std::make_unique<StorageRouter>(service_, consistentHash_);
         storage_router_->RegisterRoute();
     }
 
@@ -180,7 +186,6 @@ private:
     std::vector<int> storage_ports_;
     hv::HttpService service_;
     hv::HttpServer server_;
-    std::shared_ptr<KvService> kvService_;
     
     // RPC客户端和连接列表
     client* client_;
@@ -191,6 +196,9 @@ private:
     
     // 存储路由
     std::unique_ptr<StorageRouter> storage_router_;
+
+    std::shared_ptr<KvService> kvService_;
+    
 };
 
 #endif // GATEWAY_HPP
