@@ -83,11 +83,17 @@ private:
             if (pos != std::string::npos) {
                 std::string key = line.substr(0, pos);
                 std::string value = line.substr(pos + 1);
-                // 去除首尾空格
-                key.erase(0, key.find_first_not_of(" \t"));
-                key.erase(key.find_last_not_of(" \t") + 1);
-                value.erase(0, value.find_first_not_of(" \t"));
-                value.erase(value.find_last_not_of(" \t") + 1);
+                // 去除首尾空格和换行符
+                key.erase(0, key.find_first_not_of(" \t\r\n"));
+                if (!key.empty()) {
+                    key.erase(key.find_last_not_of(" \t\r\n") + 1);
+                }
+                value.erase(0, value.find_first_not_of(" \t\r\n"));
+                if (!value.empty()) {
+                    value.erase(value.find_last_not_of(" \t\r\n") + 1);
+                }
+                
+                std::cout << "Config loaded: [" << key << "] = [" << value << "]" << std::endl;
                 configs_[key] = value;
             }
         }
@@ -100,18 +106,31 @@ private:
 class GatewayServer {
 public:
     GatewayServer(const std::string& configFile = "config/gateway_config.env", std::shared_ptr<KvService> kvService = nullptr) : kvService_(kvService) {
+        std::cout << "Loading config..." << std::endl;
         ConfigManager config(configFile);
         port_ = config.getInt("GATEWAY_PORT", 8080);
         thread_num_ = config.getInt("GATEWAY_THREAD_NUM", 4);
         storage_ports_ = config.getIntList("STORAGE_PORTS");
         max_retries_ = config.getInt("RPC_MAX_RETRIES", 3);
+        
+        std::cout << "Starting RPC client..." << std::endl;
+        client_ = &client::get();
+        client_->run(); // 启动 RPC 客户端的 io_context 线程池
+        
+        std::cout << "Initializing client connections..." << std::endl;
         initClient();
+        
+        std::cout << "Registering watches..." << std::endl;
         registerWatch();
+        
+        std::cout << "Registering routes..." << std::endl;
         registerRoutes();
+        
+        std::cout << "Configuring libhv server..." << std::endl;
         server_.registerHttpService(&service_);
         server_.setPort(port_);
         server_.setThreadNum(thread_num_);
-        LOG_INFO(getGatewayLogger(), "Gateway running on port {}", port_);
+        LOG_INFO(getGatewayLogger(), "Gateway configured to run on port {}", port_);
     }
     
     ~GatewayServer() = default;
@@ -150,21 +169,26 @@ public:
     // 启动健康检查线程
     
     void initClient(){
-        for(int i=0;i<storage_ports_.size();i++){
+        std::cout << "initClient: " << storage_ports_.size() << " ports found." << std::endl;
+        for(size_t i=0;i<storage_ports_.size();i++){
             auto port=storage_ports_[i];
-            auto conn=client::get().connect("127.0.0.1", port);
+            std::cout << "initClient: trying to connect to port " << port << std::endl;
+            // 使用较短的超时时间进行连接，防止长时间阻塞
+            auto conn=client::get().connect("127.0.0.1", port, 100); 
             if (conn) {
                 storage_conns_.push_back(conn);
                 consistentHash_.addNode(std::to_string(i),port,conn);
+                std::cout << "initClient: connected to port " << port << std::endl;
             } else {
                 std::cout << "Failed to connect to node " << port << "" << std::endl;
             }
         }
-        
+        std::cout << "initClient done." << std::endl;
     }
    
     
     void start() {
+        std::cout << "Gateway starting libhv HttpServer..." << std::endl;
         server_.run();
     }
     

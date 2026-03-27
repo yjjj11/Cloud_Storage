@@ -81,6 +81,8 @@ target_link_libraries(gateway
     pthread 
     hv 
     Threads::Threads
+    OpenSSL::SSL
+    OpenSSL::Crypto
 )
 
 # 存储节点源文件（三个节点）
@@ -96,3 +98,11 @@ target_link_libraries(storage_node
     hv
     Threads::Threads
 )
+
+find_package(OpenSSL REQUIRED)
+
+add_executable(qwen_client qwen_stream_client.cpp)
+
+# 链接 OpenSSL 库
+target_link_libraries(qwen_client PRIVATE ${OPENSSL_LIBRARIES})
+

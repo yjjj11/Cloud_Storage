@@ -14,7 +14,10 @@
 #include <sstream>
 #include "route.hpp"
 #include "hash.hpp"
+#include "qwen_stream_client.hpp"
 #include "../../third_party/raftKV/include/kv_store.hpp"
+#include "service/embedding_client.hpp"
+#include "service/qwen_stream_client.hpp"
 using namespace mrpc;
 
 // URL解码函数，解决中文文件名乱码问题
@@ -42,7 +45,9 @@ public:
         : Router(service), consistentHash_(consistentHash) {
     }
     ~StorageRouter() {
-        updateNodeThread_.join();
+        if (updateNodeThread_.joinable()) {
+            updateNodeThread_.join();
+        }
     }
 private:
     void updateNodePort() {
@@ -89,11 +94,29 @@ public:
             // 存储filename到fileId的映射asd
             
             filename_to_fileId_[filename] = fileId;
-                
+            std::cout<<"filename = "<<filename<<" fileid = "<<fileId<<"\n";
             // 使用一致性哈希选择存储节点
             NodeInfo node = consistentHash_.getResponsibleNode(fileId);
             std::cout << "Selected storage node: " << node.id << " (port: " << node.port << ")" << std::endl;
             
+
+             std::cout << "✅ 文件上传成功，开始自动构建 RAG 索引：" << filename << std::endl;
+
+                // 1. 创建一个 RAG 对象（你可以改成全局/单例/Map 管理多个文件）
+                auto rag_instance = std::make_unique<RAG>();
+                rag_instance->load_document(file_content, filename);
+                file_rag_map_[fileId] = std::move(rag_instance); // 移动指针，合法
+                std::cout<<"filename = "<<filename<<" fileid = "<<fileId<<"\n";
+                std::cout << "✅ RAG 索引构建完成：" << filename << " | fileId: " << fileId << std::endl;
+
+
+                std::string summary = QwenClient::get().chat(
+                    "请用100字以内概括这份文档的核心内容：\n" + file_content.substr(0, 2000)
+                );
+                file_info_map_[fileId] = {filename, summary};
+                std::cout<<"filename = "<<filename<<" fileid = "<<fileId<<"\n";
+                std::cout << "✅ 摘要生成成功：" << filename << std::endl;
+
             // 直接使用NodeInfo中的conn
             auto storage_conn = node.conn;
             
@@ -111,6 +134,7 @@ public:
             try {
                 auto result = storage_conn->call<std::string>("upload_file", metadata, file_content);
                 std::string res_str = result.value();
+
                 res->SetBody(res_str);
                 return HTTP_STATUS_OK;
             } catch (const std::exception& e) {
@@ -206,6 +230,55 @@ public:
                 return HTTP_STATUS_INTERNAL_SERVER_ERROR;
             }
         });
+
+        // 5. AI 聊天接口 (SSE)
+        service_.POST("/api/chat", [this](const HttpContextPtr& ctx) -> int {
+            // 解析请求体中的用户输入
+            std::string user_input;
+            try {
+                auto req_json = nlohmann::json::parse(ctx->request->body);
+                if (req_json.contains("message")) {
+                    user_input = req_json["message"];
+                }
+            } catch (const std::exception& e) {
+                ctx->response->SetBody("Invalid JSON request");
+                return HTTP_STATUS_BAD_REQUEST;
+            }
+
+            if (user_input.empty()) {
+                ctx->response->SetBody("Message is required");
+                return HTTP_STATUS_BAD_REQUEST;
+            }
+
+            std::cout<<"user_input = "<<user_input<<"\n";
+            ctx->writer->Begin();
+            ctx->writer->WriteHeader("Cache-Control", "no-cache");
+            ctx->writer->WriteHeader("Connection", "keep-alive");
+            ctx->writer->EndHeaders("Content-Type", "text/event-stream");
+
+            std::string router_prompt=build_router_prompt(user_input);
+            std::cout<<"router_prompt = "<<router_prompt<<"\n";
+            std::string fileid=QwenClient::get().chat(std::move(router_prompt));
+            std::cout << "✅ 路由选择 : " << fileid << std::endl;
+            auto chunks=file_rag_map_[fileid]->hybrid_search(user_input);
+
+            std::string final_prompt = buildRagPrompt(user_input, chunks);
+            QwenClient::get().run(final_prompt, [&ctx](const std::string& chunk, bool is_done) {
+                if (is_done) {
+                    ctx->writer->write("data: [DONE]\n\n");
+                } else {
+                    // 转义换行符等，为了简单，我们可以将增量文本包装进 JSON
+                    nlohmann::json res_chunk;
+                    res_chunk["content"] = chunk;
+                    std::string data_str = "data: " + res_chunk.dump() + "\n\n";
+                    ctx->writer->write(data_str);
+                }
+                return true;
+            });
+
+            ctx->writer->close();
+            return 0; // 0 表示请求已在回调中处理完毕
+        });
     }
     
 private:
@@ -232,6 +305,50 @@ private:
         return cached_html_;
     }
     
+    std::string build_router_prompt(const std::string& user_query) {
+        std::string prompt = R"(
+你是一个RAG路由专家，根据用户问题选择最相关的文档。
+只输出fileId，不要输出任何多余内容。
+
+可选知识库：
+)";
+
+        for (auto& [fid, info] : file_info_map_) {
+            prompt += "fileId: " + fid + "\n";
+            prompt += "文件名: " + info.first + "\n";
+            prompt += "内容摘要: " + info.second + "\n\n";
+        }
+
+        prompt += "用户问题：" + user_query + "\n";
+        prompt += "请输出匹配的fileId：";
+        return prompt;
+    }
+
+    
+    std::string buildRagPrompt(
+        const std::string& user_input,
+        const std::vector<std::pair<std::string, float>>& callback_chunks
+    ) {
+        // 系统角色定义
+        std::string prompt = R"(
+    你是一个专业的智能问答助手，请严格根据提供的参考资料回答用户问题，不要编造信息。
+    如果参考资料中没有相关答案，请明确说明：“根据现有资料无法回答”。
+    回答要求：准确、简洁、有条理、不使用格式化符号。
+
+    【参考资料】
+    )";
+
+        // 拼接所有检索片段
+        for (size_t i = 0; i < callback_chunks.size(); ++i) {
+            prompt += "[" + std::to_string(i + 1) + "] " + callback_chunks[i].first + "\n";
+        }
+
+        // 最后加入用户问题
+        prompt += "\n【用户问题】\n" + user_input + "\n";
+        prompt += "\n请根据参考资料回答：\n";
+
+        return prompt;
+    }
     // 一致性哈希
     ConsistentHash& consistentHash_;
     
@@ -245,4 +362,7 @@ private:
     
 
     std::thread updateNodeThread_;
+    std::unordered_map<std::string, std::unique_ptr<RAG>> file_rag_map_;
+    // 存储结构：fileId → { 文件名, 摘要 }
+    std::unordered_map<std::string, std::pair<std::string, std::string>> file_info_map_;
 };

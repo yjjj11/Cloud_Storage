@@ -1,0 +1,11 @@
+# Tasks
+- [ ] Task 1: Refactor Qwen Stream Client
+  - [ ] SubTask 1.1: 创建 `include/service/qwen_stream_client.hpp`。
+  - [ ] SubTask 1.2: 将 `qwen_stream_client.cpp` 的逻辑封装为 `QwenClient` 类，并暴露 `run(const std::string& prompt, std::function<void(const std::string&)> callback)` 接口。
+  - [ ] SubTask 1.3: 编写一个终端测试代码确保 `QwenClient::run` 接口可以正常在终端输出流式结果。
+- [ ] Task 2: Implement Backend Chat API in Router
+  - [ ] SubTask 2.1: 修改 `include/service/storage_router.hpp`，增加路由 `/api/chat`。
+  - [ ] SubTask 2.2: 在该路由中结合 `QwenClient` 和 `libhv` 的流式写入功能（SSE 或 Chunked），实现流式 HTTP 响应。
+- [ ] Task 3: Update Frontend UI
+  - [ ] SubTask 3.1: 在 `include/resource/index.html` 中添加聊天框相关的 HTML 和 CSS。
+  - [ ] SubTask 3.2: 编写 JavaScript 逻辑，向 `/api/chat` 发送用户输入，并实时接收流式数据渲染到聊天窗口。
