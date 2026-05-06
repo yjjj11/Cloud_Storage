@@ -120,7 +120,7 @@ public:
     void load_document(const std::string& document_text, 
                        const std::string& document_name,  // 🔥 必传
                        int chunk_size = 500) {
-                        std::string clean_content = clean_utf8(document_text); 
+        std::string clean_content = safe_utf8_truncate(document_text, 500); 
         document_name_ = document_name; // 保存名称
         chunks_ = split_text(clean_content, chunk_size);
         auto& client = EmbeddingClient::instance();
@@ -144,48 +144,40 @@ public:
         load_document(content, name, chunk_size);
     }
 
-    std::string clean_utf8(const std::string& input) {
-    std::string output;
-    output.reserve(input.size());
-
-    for (size_t i = 0; i < input.size();) {
-        uint8_t c = static_cast<uint8_t>(input[i]);
-        if (c < 0x80) {
-            output.push_back(c);
+    // 安全截断字符串，确保不会截断 UTF-8 多字节字符
+std::string safe_utf8_truncate(const std::string& s, size_t max_len) {
+    if (s.size() <= max_len) return s;
+    size_t len = 0;
+    for (size_t i = 0; i < s.size() && len < max_len; ) {
+        unsigned char c = s[i];
+        if (c < 0x80) { // 单字节
+            len++;
             i++;
-        } else if (c < 0xC0) {
-            // 非法单字节，跳过
-            i++;
-        } else if (c < 0xE0) {
-            if (i + 1 < input.size() && (static_cast<uint8_t>(input[i+1]) & 0xC0) == 0x80) {
-                output.append(input, i, 2);
-            }
-            i += 2;
-        } else if (c < 0xF0) {
-            if (i + 2 < input.size() && 
-                (static_cast<uint8_t>(input[i+1]) & 0xC0) == 0x80 &&
-                (static_cast<uint8_t>(input[i+2]) & 0xC0) == 0x80) {
-                output.append(input, i, 3);
-            }
-            i += 3;
-        } else if (c < 0xF8) {
-            if (i + 3 < input.size() && 
-                (static_cast<uint8_t>(input[i+1]) & 0xC0) == 0x80 &&
-                (static_cast<uint8_t>(input[i+2]) & 0xC0) == 0x80 &&
-                (static_cast<uint8_t>(input[i+3]) & 0xC0) == 0x80) {
-                output.append(input, i, 4);
-            }
-            i += 4;
+        } else if ((c & 0xE0) == 0xC0) { // 2字节
+            if (i + 1 < s.size()) {
+                len += 2;
+                i += 2;
+            } else break;
+        } else if ((c & 0xF0) == 0xE0) { // 3字节
+            if (i + 2 < s.size()) {
+                len += 3;
+                i += 3;
+            } else break;
+        } else if ((c & 0xF8) == 0xF0) { // 4字节
+            if (i + 3 < s.size()) {
+                len += 4;
+                i += 4;
+            } else break;
         } else {
-            i++;
+            i++; // 跳过非法字节
         }
     }
-    return output;
+    return s.substr(0, len);
 }
     // ------------------------------
     // 文本切片
     // ------------------------------
-    std::vector<std::string> split_text(const std::string& text, int max_chunk_size = 30) {
+    std::vector<std::string> split_text(const std::string& text, int max_chunk_size = 300) {
         std::vector<std::string> chunks;
         if (text.empty()) return chunks;
 

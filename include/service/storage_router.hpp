@@ -14,8 +14,8 @@
 #include <sstream>
 #include "route.hpp"
 #include "hash.hpp"
+#include "kv_client.hpp"
 #include "qwen_stream_client.hpp"
-#include "../../third_party/raftKV/include/kv_store.hpp"
 #include "service/embedding_client.hpp"
 #include "service/qwen_stream_client.hpp"
 using namespace mrpc;
@@ -41,22 +41,15 @@ std::string urlDecode(const std::string& encoded) {
 
 class StorageRouter : public Router {
 public:
-    StorageRouter(HttpService &service, ConsistentHash& consistentHash)
-        : Router(service), consistentHash_(consistentHash) {
+    StorageRouter(HttpService &service, ConsistentHash& consistentHash,
+                   const std::string& meta_ip, int meta_port)
+        : Router(service)
+        , consistentHash_(consistentHash)
+        , kv_client_(meta_ip, meta_port) {
     }
-    ~StorageRouter() {
-        if (updateNodeThread_.joinable()) {
-            updateNodeThread_.join();
-        }
-    }
-private:
-    void updateNodePort() {
-        while (true) {
-            std::this_thread::sleep_for(std::chrono::seconds(1));
-            
-        }
-    }
-    
+
+    ~StorageRouter() = default;
+
 public:
     void RegisterRoute() override {
         // 健康检查接口
@@ -64,114 +57,78 @@ public:
             res->SetBody("Server is running");
             return HTTP_STATUS_OK;
         });
-        
+
         // 根路径HTML响应
         service_.GET("/", [this](HttpRequest* req, HttpResponse* res) -> int {
-            // 使用缓存的HTML内容，支持热更新
             std::string html = getCachedHtml();
             res->content_type = TEXT_HTML;
             res->SetBody(html);
             return HTTP_STATUS_OK;
         });
-        
+
         // 1. 文件上传
         service_.POST("/api/storage/upload", [this](HttpRequest* req, HttpResponse* res) -> int {
-            // 获取文件名并进行URL解码，解决中文文件名乱码问题
             std::string filename = urlDecode(req->GetParam("filename", ""));
             if (filename.empty()) {
                 res->SetBody("Filename is required");
                 return HTTP_STATUS_BAD_REQUEST;
             }
-            
-            std::cout << "Received filename (decoded): " << filename << std::endl;
-            
-            // 获取文件内容
-            std::string file_content = req->body;
-            
-            // 生成唯一的fileId
+
+            // 优先用body参数获取纯内容（兼容测试）
+            std::string body_param = req->GetParam("body", "");
+            std::string file_content = body_param.empty() ? req->body : body_param;
+
             std::string fileId = generateFileId(filename);
-                
-            // 存储filename到fileId的映射asd
-            
-            filename_to_fileId_[filename] = fileId;
-            std::cout<<"filename = "<<filename<<" fileid = "<<fileId<<"\n";
-            // 使用一致性哈希选择存储节点
+
+            std::cout << "[Gateway] 上传文件: " << filename << " fileId: " << fileId << std::endl;
+
+            // 一致性哈希选节点
             NodeInfo node = consistentHash_.getResponsibleNode(fileId);
-            std::cout << "Selected storage node: " << node.id << " (port: " << node.port << ")" << std::endl;
-            
 
-             std::cout << "✅ 文件上传成功，开始自动构建 RAG 索引：" << filename << std::endl;
-
-                // 1. 创建一个 RAG 对象（你可以改成全局/单例/Map 管理多个文件）
-                auto rag_instance = std::make_unique<RAG>();
-                rag_instance->load_document(file_content, filename);
-                file_rag_map_[fileId] = std::move(rag_instance); // 移动指针，合法
-                std::cout<<"filename = "<<filename<<" fileid = "<<fileId<<"\n";
-                std::cout << "✅ RAG 索引构建完成：" << filename << " | fileId: " << fileId << std::endl;
-
-
-                std::string summary = QwenClient::get().chat(
-                    "请用100字以内概括这份文档的核心内容：\n" + file_content.substr(0, 2000)
-                );
-                file_info_map_[fileId] = {filename, summary};
-                std::cout<<"filename = "<<filename<<" fileid = "<<fileId<<"\n";
-                std::cout << "✅ 摘要生成成功：" << filename << std::endl;
-
-            // 直接使用NodeInfo中的conn
-            auto storage_conn = node.conn;
-            
-            // 准备元数据
+            // 调用存储节点
             CloudStorageMetadata metadata;
             metadata.fileId = fileId;
             metadata.filename = filename;
             metadata.size = file_content.size();
             metadata.contentType = "application/octet-stream";
-            metadata.updateTime = metadata.createTime;
-            metadata.storageClass = "STANDARD";
             metadata.bucketName = std::to_string(node.port);
-            
-            // 通过RPC调用存储节点的上传服务
-            try {
-                auto result = storage_conn->call<std::string>("upload_file", metadata, file_content);
-                std::string res_str = result.value();
 
-                res->SetBody(res_str);
+            try {
+                auto result = node.conn->call<std::string>("upload_file", metadata, file_content);
+                res->SetBody(result.value());
                 return HTTP_STATUS_OK;
             } catch (const std::exception& e) {
                 res->SetBody("RPC error: " + std::string(e.what()));
                 return HTTP_STATUS_INTERNAL_SERVER_ERROR;
             }
         });
-        
-        // // 2. 文件下载
+
+
+        // 2. 文件下载（修改版：通过元数据中的 bucketName 找节点）
         service_.GET("/api/storage/download/{filename}", [this](HttpRequest* req, HttpResponse* res) -> int {
-            // 获取文件名并进行URL解码，解决中文文件名乱码问题
             std::string filename = urlDecode(req->GetParam("filename", ""));
             if (filename.empty()) {
                 res->SetBody("Filename is required");
                 return HTTP_STATUS_BAD_REQUEST;
             }
-            
-            std::cout << "Download request for filename (decoded): " << filename << std::endl;
-            // 从RaftKV中获取元数据
-            auto filekey=filename_to_fileId_[filename];
+            auto hash = generateFileId(filename);
+            auto node = consistentHash_.getResponsibleNode(hash);
 
-            // 使用一致性哈希选择存储节点
-            NodeInfo node = consistentHash_.getResponsibleNode(filekey);
-            std::cout << "Selected storage node for download: " << node.id << " (port: " << node.port << ")" << std::endl;
-            
-            // 直接使用NodeInfo中的conn
-            auto storage_conn = node.conn;
-            
-            // 通过RPC调用存储节点的下载服务
+             std::cout << "[Gateway] 下载文件: " << filename << " fileId: " << hash << " 负责节点: " << node.port << std::endl;
+
+             if (!node.conn) {
+                res->SetBody("Responsible storage node is unavailable");
+                return HTTP_STATUS_SERVICE_UNAVAILABLE;
+            }
+
+            // 6. 调用存储节点下载文件
             try {
-                auto result = storage_conn->call<std::string>("download_file", filename);
+                auto result = node.conn->call<std::string>("download_file", filename);
                 std::string file_content = result.value();
                 if (file_content.empty()) {
-                    res->SetBody("File not found");
+                    res->SetBody("File not found on storage node");
                     return HTTP_STATUS_NOT_FOUND;
                 }
-                // 设置响应头
                 res->content_type = APPLICATION_OCTET_STREAM;
                 res->SetHeader("Content-Disposition", "attachment; filename=" + filename);
                 res->SetBody(file_content);
@@ -181,49 +138,70 @@ public:
                 return HTTP_STATUS_INTERNAL_SERVER_ERROR;
             }
         });
-        
+
         // 3. 列举文件
         service_.GET("/api/storage/list", [this](HttpRequest* req, HttpResponse* res) -> int {
+            std::cout << "[Gateway] 列举文件" << std::endl;
             std::string combined_list = "Files:\n";
-            
+
             for (const auto& pair : consistentHash_.port_to_node_id_) {
                 const NodeInfo& node = pair.second;
+                std::cout << "[Gateway] 正在查询节点 " << node.port << " 的文件列表，连接状态: " << (node.conn ? "有效" : "无效") << std::endl;
+                
+                if (!node.conn) {
+                    std::cout << "[Gateway] 节点 " << node.port << " 连接无效，跳过" << std::endl;
+                    continue;
+                }
+
                 try {
-                    auto result = node.conn->call<std::string>("list_files", 0);
-                    std::string file_list = result.value();
-                    combined_list += file_list + "\n";
+                    // 调用无参数的 list_files
+                    auto result = node.conn->call<std::string>("list_files");
+                    if (result.error_code() != mrpc::ok) {
+                        std::cout << "[Gateway] RPC调用失败: " << result.error_msg() << std::endl;
+                        continue;
+                    }
+
+                    std::string files = result.value();
+                    if (files.empty()) {
+                        std::cout << "[Gateway] 节点 " << node.port << " 无文件" << std::endl;
+                        continue;
+                    }
+
+                    std::cout << "[Gateway] 节点 " << node.port << " 返回文件: " << files << std::endl;
+                    
+                    // ====================== 关键修改 ======================
+                    // 把每行前面加上 "- "，让前端能直接识别！
+                    std::istringstream iss(files);
+                    std::string line;
+                    while (std::getline(iss, line)) {
+                        if (!line.empty()) {
+                            combined_list += "- " + line + "\n";
+                        }
+                    }
+                    // ======================================================
+
                 } catch (const std::exception& e) {
-                    std::cout << "Error listing files from node " << node.id << ": " << e.what() << std::endl;
+                    std::cout << "[Gateway] 节点 " << node.port << " 异常: " << e.what() << std::endl;
                 }
             }
 
-            
             res->SetBody(combined_list);
             return HTTP_STATUS_OK;
         });
-        
+
         // 4. 删除文件
         service_.Delete("/api/storage/delete/{filename}", [this](HttpRequest* req, HttpResponse* res) -> int {
-            // 获取文件名并进行URL解码，解决中文文件名乱码问题
             std::string filename = urlDecode(req->GetParam("filename", ""));
-            
-            std::cout << "Delete request for filename (decoded): " << filename << std::endl;
-            // 从RaftKV中获取元数据
-            auto fileid=filename_to_fileId_[filename];
-            
-            // 使用一致性哈希选择存储节点
-            NodeInfo target_node = consistentHash_.getResponsibleNode(fileid);
-            std::cout << "Selected storage node for delete: " << target_node.id << " (port: " << target_node.port << ")" << std::endl;
-            
-            // 直接使用NodeInfo中的conn
-            auto storage_conn = target_node.conn;
-            
-            // 通过RPC调用存储节点的删除服务
+            std::string fileId = kv_client_.Get("filemap:" + filename);
+            if (fileId.empty()) {
+                res->SetBody("File not found");
+                return HTTP_STATUS_NOT_FOUND;
+            }
+
+            NodeInfo node = consistentHash_.getResponsibleNode(fileId);
             try {
-                auto result = storage_conn->call<std::string>("delete_file", filename,fileid);
-                std::string res_str = result.value();
-                
-                res->SetBody(res_str);
+                auto result = node.conn->call<std::string>("delete_file", filename, fileId);
+                res->SetBody(result.value());
                 return HTTP_STATUS_OK;
             } catch (const std::exception& e) {
                 res->SetBody("RPC error: " + std::string(e.what()));
@@ -231,7 +209,7 @@ public:
             }
         });
 
-        // 5. AI 聊天接口 (SSE)
+
         service_.POST("/api/chat", [this](const HttpContextPtr& ctx) -> int {
             // 解析请求体中的用户输入
             std::string user_input;
@@ -260,9 +238,23 @@ public:
             std::cout<<"router_prompt = "<<router_prompt<<"\n";
             std::string fileid=QwenClient::get().chat(std::move(router_prompt));
             std::cout << "✅ 路由选择 : " << fileid << std::endl;
-            auto chunks=file_rag_map_[fileid]->hybrid_search(user_input);
 
+            auto node = consistentHash_.getResponsibleNode(fileid);
+             if (!node.conn) {
+                ctx->writer->write("data: " + nlohmann::json{{"error", "Responsible storage node is unavailable"}}.dump() + "\n\n");
+                ctx->writer->close();
+                return 0;
+            }
+            auto res=node.conn->call<std::vector<std::pair<std::string, float>>>("get_chunks", fileid, user_input);
+            if(res.error_code()!=mrpc::ok){
+                ctx->writer->write("data: " + nlohmann::json{{"error", "Failed to retrieve chunks from storage node"}}.dump() + "\n\n");
+                ctx->writer->close();
+                return 0;
+            }
+            auto chunks=res.value();
+                std::cout << "✅ 从存储节点获取到 " << chunks.size() << " 个相关文本块" << std::endl;
             std::string final_prompt = buildRagPrompt(user_input, chunks);
+            std::cout << "✅ 构建最终提示词:\n" << final_prompt << std::endl;
             QwenClient::get().run(final_prompt, [&ctx](const std::string& chunk, bool is_done) {
                 if (is_done) {
                     ctx->writer->write("data: [DONE]\n\n");
@@ -279,51 +271,67 @@ public:
             ctx->writer->close();
             return 0; // 0 表示请求已在回调中处理完毕
         });
-    }
     
+    }
+
 private:
-    // 获取缓存的HTML内容，支持热更新
-    std::string getCachedHtml() {
-        struct stat file_stat;
-        if (stat("include/resource/index.html", &file_stat) == 0) {
-            // 检查文件是否被修改
-            if (file_stat.st_mtime > html_mtime_) {
-                std::lock_guard<std::mutex> lock(html_mutex_);
-                // 双重检查
-                if (stat("include/resource/index.html", &file_stat) == 0 && 
-                    file_stat.st_mtime > html_mtime_) {
-                    std::ifstream html_file("include/resource/index.html");
-                    if (html_file.is_open()) {
-                        std::stringstream buffer;
-                        buffer << html_file.rdbuf();
-                        cached_html_ = buffer.str();
-                        html_mtime_ = file_stat.st_mtime;
-                    }
-                }
-            }
-        }
-        return cached_html_;
-    }
-    
+// ==============================
+// 网关：从所有存储节点拉取摘要
+// ==============================
     std::string build_router_prompt(const std::string& user_query) {
         std::string prompt = R"(
-你是一个RAG路由专家，根据用户问题选择最相关的文档。
-只输出fileId，不要输出任何多余内容。
+    你是一个RAG路由专家，根据用户问题选择最相关的文档。
+    只输出fileId，不要输出任何多余内容。
 
-可选知识库：
-)";
+    可选知识库：
+    )";
 
-        for (auto& [fid, info] : file_info_map_) {
-            prompt += "fileId: " + fid + "\n";
-            prompt += "文件名: " + info.first + "\n";
-            prompt += "内容摘要: " + info.second + "\n\n";
+        // 遍历所有存储节点，拉取每个节点的文件摘要
+        for (const auto& pair : consistentHash_.port_to_node_id_) {
+            const NodeInfo& node = pair.second;
+
+            std::cout << "[Gateway] 查询节点 " << node.port << " 的文件摘要信息" << std::endl;
+            if (!node.conn) {
+                std::cout << "[Gateway] 节点 " << node.port << " 无效，跳过" << std::endl;
+                continue;
+            }
+
+            try {
+                // ======================
+                // RPC 调用：获取摘要
+                // ======================
+                auto result = node.conn->call<std::string>("get_all_summaries",1);
+                if (result.error_code() != mrpc::ok) {
+                    std::cout << "[Gateway] RPC 获取摘要失败: " << result.error_msg() << std::endl;
+                    continue;
+                }
+
+                std::string json_str = result.value();
+                if (json_str.empty()) {
+                    continue;
+                }
+
+                // 解析返回的 JSON 数组
+                json summaries = json::parse(json_str);
+                for (auto& item : summaries) {
+                    std::string fileId = item["fileId"];
+                    std::string filename = item["filename"];
+                    std::string summary = item["summary"];
+
+                    prompt += "fileId: " + fileId + "\n";
+                    prompt += "文件名: " + filename + "\n";
+                    prompt += "内容摘要: " + summary + "\n\n";
+                }
+
+            } catch (const std::exception& e) {
+                std::cerr << "[Gateway] 节点 " << node.port << " 异常：" << e.what() << std::endl;
+            }
         }
 
         prompt += "用户问题：" + user_query + "\n";
         prompt += "请输出匹配的fileId：";
         return prompt;
     }
-
     
     std::string buildRagPrompt(
         const std::string& user_input,
@@ -347,22 +355,34 @@ private:
         prompt += "\n【用户问题】\n" + user_input + "\n";
         prompt += "\n请根据参考资料回答：\n";
 
+
+        std::cout<<"构建RAG提示词:\n" << prompt << std::endl;
         return prompt;
     }
-    // 一致性哈希
+
+    std::string getCachedHtml() {
+        struct stat file_stat;
+        if (stat("include/resource/index.html", &file_stat) == 0) {
+            if (file_stat.st_mtime > html_mtime_) {
+                std::lock_guard<std::mutex> lock(html_mutex_);
+                if (file_stat.st_mtime > html_mtime_) {
+                    std::ifstream html_file("include/resource/index.html");
+                    if (html_file.is_open()) {
+                        std::stringstream buffer;
+                        buffer << html_file.rdbuf();
+                        cached_html_ = buffer.str();
+                        html_mtime_ = file_stat.st_mtime;
+                    }
+                }
+            }
+        }
+        return cached_html_;
+    }
+
     ConsistentHash& consistentHash_;
-    
-    // HTML缓存，支持热更新
+    KvClient kv_client_;
+
     std::string cached_html_;
     std::mutex html_mutex_;
     time_t html_mtime_{0};
-
-    // 从filename到fileId的映射
-    std::unordered_map<std::string, std::string> filename_to_fileId_;
-    
-
-    std::thread updateNodeThread_;
-    std::unordered_map<std::string, std::unique_ptr<RAG>> file_rag_map_;
-    // 存储结构：fileId → { 文件名, 摘要 }
-    std::unordered_map<std::string, std::pair<std::string, std::string>> file_info_map_;
 };

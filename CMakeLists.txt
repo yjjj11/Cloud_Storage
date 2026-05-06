@@ -69,40 +69,51 @@ target_link_libraries(testRaft
     Threads::Threads
 )
 
-# 网关源文件
+# 网关源文件（不再内嵌Raft）
 add_executable(gateway
     src/log/gateway.cpp
-    ${MRPC_SRC_FILES}  # 引入 Asio_mrpc 源码
-    ${RAFTKV_SRC_FILES}  # 引入 raftKV 源码
+    ${MRPC_SRC_FILES}
 )
 
-# 链接依赖库
-target_link_libraries(gateway 
-    pthread 
-    hv 
+target_link_libraries(gateway
+    pthread
+    hv
     Threads::Threads
     OpenSSL::SSL
     OpenSSL::Crypto
 )
 
-# 存储节点源文件（三个节点）
+# 存储节点源文件（不再内嵌Raft）
 add_executable(storage_node
     src/log/storage_node.cpp
-    ${MRPC_SRC_FILES}  # 引入 Asio_mrpc 源码
-    ${RAFTKV_SRC_FILES}  # 引入 raftKV 源码
+    ${MRPC_SRC_FILES}
 )
 
-# 链接依赖库
 target_link_libraries(storage_node
-    pthread 
+    pthread
+    hv
+    Threads::Threads
+    OpenSSL::SSL
+    OpenSSL::Crypto
+)
+
+# 元数据节点（带RaftKV）
+add_executable(meta_node
+    src/log/meta_node.cpp
+    ${MRPC_SRC_FILES}
+    ${RAFTKV_SRC_FILES}
+)
+
+target_link_libraries(meta_node
+    pthread
     hv
     Threads::Threads
 )
 
 find_package(OpenSSL REQUIRED)
 
-add_executable(qwen_client qwen_stream_client.cpp)
-
+add_executable(test_qwen test_qwen.cpp)
 # 链接 OpenSSL 库
-target_link_libraries(qwen_client PRIVATE ${OPENSSL_LIBRARIES})
+target_link_libraries(test_qwen PRIVATE ${OPENSSL_LIBRARIES})
+
 

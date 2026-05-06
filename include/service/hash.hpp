@@ -43,7 +43,7 @@ public:
     // 添加存储节点
     void addNode(const std::string& nodeId, int port, std::shared_ptr<connection> conn) {
         // 为每个节点创建多个虚拟节点
-        for (int i = 0; i < 160; i++) {
+        for (int i = 0; i < 2; i++) {
             std::string virtualNode = nodeId + "#" + std::to_string(i);
             size_t hash = hashFunc(virtualNode);
             NodeInfo nodeInfo(nodeId, port);
@@ -77,7 +77,7 @@ public:
     // 移除节点
     void removeNode(const std::string& nodeId, int port) {
         // 移除该节点的所有虚拟节点
-        for (int i = 0; i < 160; i++) {
+        for (int i = 0; i < 2; i++) {
             std::string virtualNode = nodeId + "#" + std::to_string(i);
             size_t hash = hashFunc(virtualNode);
             hashRing_.erase(hash);
@@ -105,20 +105,11 @@ private:
 
 // 生成唯一的fileId
 std::string generateFileId(const std::string& filename) {
-    // 生成基于时间戳和随机数的唯一ID
-    auto now = std::chrono::system_clock::now();
-    auto timestamp = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()).count();
-    
-    // 生成随机数
-    static std::random_device rd;
-    static std::mt19937 gen(rd());
-    static std::uniform_int_distribution<uint64_t> dis(0, UINT64_MAX);
-    uint64_t random = dis(gen);
-    
-    // 组合生成fileId
-    std::stringstream ss;
-    ss << timestamp << "_" << random << "_" << filename;
-    return ss.str();
+    size_t hash = 0;
+    for (char c : filename) {
+        hash = hash * 31 + c;
+    }
+    return std::to_string(hash);
 }
 
 // 云存储元数据结构体（带默认值）
